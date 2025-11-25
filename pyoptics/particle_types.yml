@@ -1,0 +1,234 @@
+#============================================================================================
+# Dipole Multi Program Suite particle types file
+# 2025 Version 1.0 02/03/25
+#============================================================================================
+# Particle type parameters:
+#     material_name: Silicon (common name)
+#     refractive_index: 3.9 (real or complex)
+#     display_colour: '#e0a105' (hex colour string)
+#     alt_display_colour: '#ffe10a' (hex colour string)
+#     vtf_colour_name: S (element symbol for colour purposes)
+#============================================================================================
+# Particle types
+#============================================================================================
+Silicon:
+    refractive_index: 3.9
+    display_colour: '#e0a105'
+    alt_display_colour: '#ffe10a'
+    vtf_colour_name: S
+Sapphire:
+    refractive_index: 2.5
+    display_colour: '#b01240'
+    alt_display_colour: '#e81e80'
+    vtf_colour_name: O
+Diamond:
+    refractive_index: 2.417
+    display_colour: '#b01240'
+    alt_display_colour: '#e81e80'
+    vtf_colour_name: C
+SiN:
+    refractive_index: 2.046
+    display_colour: '#d8ff60'
+    alt_display_colour: '#e8ff80'
+    vtf_colour_name: P
+Glass:
+    refractive_index: 1.5
+    density: 2200
+    display_colour: '#1870d0'
+    alt_display_colour: '#2298f5'
+    vtf_colour_name: N
+LeadGlass:
+    refractive_index: 1.6
+    display_colour: '#1870d0'
+    alt_display_colour: '#2298f5'
+    vtf_colour_name: N
+Low:
+    refractive_index: 1.446
+    density: 2200
+    display_colour: '#7e7e7e'
+    alt_display_colour: '#aeaeae'
+    vtf_colour_name: H
+FusedSilica:
+    refractive_index: 1.458
+    density: 2200
+    display_colour: '#7e7e7e'
+    alt_display_colour: '#aeaeae'
+    vtf_colour_name: B
+FusedSilica0001:
+    refractive_index: 1.458+0.0001j
+    density: 2200
+    display_colour: '#7e7e7e'
+    alt_display_colour: '#aeaeae'
+    vtf_colour_name: B
+FusedSilica0002:
+    refractive_index: 1.458+0.0002j
+    density: 2200
+    display_colour: '#7e7e7e'
+    alt_display_colour: '#aeaeae'
+    vtf_colour_name: B
+FusedSilica0005:
+    refractive_index: 1.458+0.0005j
+    density: 2200
+    display_colour: '#7e7e7e'
+    alt_display_colour: '#aeaeae'
+    vtf_colour_name: B
+FusedSilica001:
+    refractive_index: 1.458+0.001j
+    density: 2200
+    display_colour: '#7e7e7e'
+    alt_display_colour: '#aeaeae'
+    vtf_colour_name: B
+FusedSilica002:
+    refractive_index: 1.458+0.002j
+    density: 2200
+    display_colour: '#7e7e7e'
+    alt_display_colour: '#aeaeae'
+    vtf_colour_name: B
+FusedSilica005:
+    refractive_index: 1.458+0.005j
+    density: 2200
+    display_colour: '#7e7e7e'
+    alt_display_colour: '#aeaeae'
+    vtf_colour_name: B
+FusedSilica01:
+    refractive_index: 1.458+0.01j
+    density: 2200
+    display_colour: '#7e7e7e'
+    alt_display_colour: '#aeaeae'
+    vtf_colour_name: B
+Chromium:
+    refractive_index: 3.41+3.57j
+    display_colour: '#ffffff'
+    alt_display_colour: '#eeeeee'
+    vtf_colour_name: Cr
+Titania:
+    refractive_index: 2.31
+    display_colour: '#ffffff'
+    alt_display_colour: '#eeeeee'
+    vtf_colour_name: Ti
+HighTitania:
+    refractive_index: 2.4789
+    display_colour: '#ffffff'
+    alt_display_colour: '#eeeeee'
+    vtf_colour_name: Ti
+Air:
+    refractive_index: 1.00
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: Ar
+Standard140:
+    refractive_index: 1.40
+    display_colour: '#7e7e7e'
+    alt_display_colour: '#aeaeae'
+    vtf_colour_name: B
+Standard145:
+    refractive_index: 1.45
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard150:
+    refractive_index: 1.5
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard155:
+    refractive_index: 1.55
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard160:
+    refractive_index: 1.6
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard165:
+    refractive_index: 1.65
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard170:
+    refractive_index: 1.7
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard175:
+    refractive_index: 1.75
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard180:
+    refractive_index: 1.8
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard185:
+    refractive_index: 1.85
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard190:
+    refractive_index: 1.9
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard195:
+    refractive_index: 1.95
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard200:
+    refractive_index: 2.0
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard205:
+    refractive_index: 2.05
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard210:
+    refractive_index: 2.1
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard215:
+    refractive_index: 2.15
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard220:
+    refractive_index: 2.2
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard225:
+    refractive_index: 2.25
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard230:
+    refractive_index: 2.3
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard235:
+    refractive_index: 2.35
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+Standard240:
+    refractive_index: 2.4
+    display_colour: '#0f0f0f'
+    alt_display_colour: '#1f1f1f'
+    vtf_colour_name: B
+
+RedBloodCell:
+    refractive_index: 1.41
+    display_colour: '#ff0000'
+    alt_display_colour: '#cc0000'
+    vtf_colour_name: O
+
+DefaultJanus:
+    refractive_index1: 21321
+    refractive_index2: 696996966
+    

@@ -1,0 +1,90 @@
+#============================================================================================
+# Dipole Multi Program Suite parameter defaults file
+# 2025 Version 1.0 01/03/25
+#============================================================================================
+# Beam type parameters: BEAMTYPE_PLANE, BEAMTYPE_GAUSS_BARTON5, BEAMTYPE_GAUSS_CSP,
+#   BEAMTYPE_BESSEL, BEAMTYPE_LAGUERRE_GAUSSIAN
+#============================================================================================
+# Jones vector names: POLARISATION_X, POLARISATION_Y, POLARISATION_RCP, POLARISATION_LCP,
+#   POLARISATION_RADIAL, POLARISATION_AZIMUTHAL
+#============================================================================================
+# Simulation options
+#============================================================================================
+# dynamics_method names: (Old: OSEEN, ROTNE_PRAGER, SHAKE_HI)
+# dynamics_method names: TRANS_HI, TRANSROT_HI, FORCESCANS (several)
+# hydrodynamic_tensor names: OSEEN, ROTNE_PRAGER, ROTNE_PRAGER_BLAKE
+# optics_method names: SH_DDA, MOSH_DDA, SH_DDA_NI (non-interacting)
+#============================================================================================
+simulation:
+  frames: 1000
+  include_dynamics: True
+  dynamics_method: BD_TRANS_HI
+  hi_method: OSEEN
+  include_springs: False
+  include_bending: False
+  include_gravity: False
+  include_driving: False
+  include_wall: False
+  include_nonbonded: True
+  include_optics: True
+  optics_method: SH_DDA
+#============================================================================================
+# Simulation parameters
+#============================================================================================
+parameters:
+  wavelength: 1.0e-6 # meters in vacuum
+  dipole_radius: 60e-9 # meters
+  time_step: 1e-5 # seconds
+#  spring_stiffness: 1e-5 # N/m
+  bending_stiffness: 1e-19 # bending units
+  wall_position: 1e-6 # m along z axis
+  wall_force_max: 1e-12 # N
+  wall_order: 1 # positive integer
+  wall_zrange: 1e-6 # m along z axis
+#============================================================================================
+# Output parameters
+#============================================================================================
+output:
+  vmd_output: False
+  excel_output: True
+  hdf_output: False
+  include_force: True
+  include_couple: True
+#============================================================================================
+# Display parameters
+#============================================================================================
+display:
+  show_output: True
+  frame_interval: 10
+  max_size: 3.2e-6 # range will be 2 times this
+  resolution: 201 # number of points in each direction of plot
+  frame_min: 0 # starting frame for animation
+  frame_max: 1000 # will default to number of frames
+  z_offset: 0.0e-6
+#============================================================================================
+# Beam descriptions
+#============================================================================================
+beams:
+  beam_1:
+    beamtype: BEAMTYPE_LAGUERRE_GAUSSIAN # parameter
+    E0: 25
+    order: -10
+    w0: 0.45 # fraction of wavelength
+    jones: POLARISATION_LCP # parameter
+    translation: None # translation in meters or None
+    rotation: None # x rotation followed by z rotation in degrees or None
+#============================================================================================
+# Particle descriptions
+#============================================================================================
+particles:
+  default_radius: 200e-9
+  default_material: FusedSilica
+  default_density: 2200
+#============================================================================================
+# Topology descriptions
+#============================================================================================
+topology:
+  topotype: None
+  default_spring_stiffness: 1e-5
+  default_bending_stiffness: 1e-19
+  particle_separation: 0.95e-6

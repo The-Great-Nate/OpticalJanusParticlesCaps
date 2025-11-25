@@ -1,0 +1,548 @@
+simulation:
+  frames: 200
+  include_dynamics: True
+  dynamics_method: OSEEN
+  include_springs: False
+  include_bending: False
+  include_nonbonded: True
+  include_optics: True
+  optics_method: SH_DDA
+parameters:
+  wavelength: 0.785e-6 # meters in vacuum
+  dipole_radius: 80e-9 # meters
+  time_step: 1e-4 # seconds
+output:
+  vmd_output: False
+  excel_output: False
+  hdf_output: True
+  include_force: True
+  include_couple: False
+display:
+  show_output: True
+  frame_interval: 10
+  max_size: 20e-6 # range will be 2 times this
+  resolution: 201 # number of points in each direction of plot
+  frame_min: 0 # starting frame for animation
+  frame_max: 5000 # will default to number of frames
+  z_offset: 0.0e-6
+beams:
+  beam_1:
+    beamtype: BEAMTYPE_GAUSS_CSP # parameter
+    E0: 3.000e+06
+    w0: 3.44 # fraction of wavelength
+    translation: 0.0 0.0 -50e-6 # translation in meters or None
+    rotation: 0.0 0.0 # x rotation followed by z rotation in degrees or None
+#  beam_2:
+#    beamtype: BEAMTYPE_GAUSS_CSP # parameter
+#    E0: 4.000e+06
+#    w0: 3.44 # fraction of wavelength
+#    translation: 0.0 0.0 -5e-5 # translation in meters or None
+#    rotation: 180.0 0.0 # x rotation followed by z rotation in degrees or None
+particles:
+  default_radius: 2e-07
+  default_material: FusedSilica
+  particle_list:
+    particle_0:
+      coords: -5.3348e-10 -3.0569e-11 2.1470e-06
+    particle_1:
+      coords: 1.2150e-07 3.7592e-07 2.0850e-06
+    particle_2:
+      coords: 2.6673e-07 8.2338e-07 1.9050e-06
+    particle_3:
+      coords: 4.0586e-07 1.2520e-06 1.6262e-06
+    particle_4:
+      coords: 5.2049e-07 1.6050e-06 1.2855e-06
+    particle_5:
+      coords: 5.9224e-07 1.8257e-06 9.5940e-07
+    particle_6:
+      coords: 3.9476e-07 -3.0569e-11 2.0851e-06
+    particle_7:
+      coords: 5.9634e-07 4.3374e-07 1.9637e-06
+    particle_8:
+      coords: 7.5813e-07 8.7853e-07 1.7316e-06
+    particle_9:
+      coords: 8.7174e-07 1.2821e-06 1.4119e-06
+    particle_10:
+      coords: 9.1586e-07 1.6050e-06 1.0411e-06
+    particle_11:
+      coords: 8.6523e-07 -3.0569e-11 1.9053e-06
+    particle_12:
+      coords: 1.0694e-06 4.5030e-07 1.7318e-06
+    particle_13:
+      coords: 1.2084e-06 8.7853e-07 1.4532e-06
+    particle_14:
+      coords: 1.2718e-06 1.2520e-06 1.0909e-06
+    particle_15:
+      coords: 1.3159e-06 -3.0569e-11 1.6267e-06
+    particle_16:
+      coords: 1.4884e-06 4.3374e-07 1.4122e-06
+    particle_17:
+      coords: 1.5833e-06 8.2338e-07 1.0911e-06
+    particle_18:
+      coords: 1.6871e-06 -3.0569e-11 1.2861e-06
+    particle_19:
+      coords: 1.8092e-06 3.7592e-07 1.0416e-06
+    particle_20:
+      coords: 1.9193e-06 -3.0569e-11 9.6010e-07
+    particle_21:
+      coords: -3.2040e-07 2.3232e-07 2.0851e-06
+    particle_22:
+      coords: -7.0108e-07 5.0886e-07 1.9053e-06
+    particle_23:
+      coords: -1.0657e-06 7.7374e-07 1.6267e-06
+    particle_24:
+      coords: -1.3659e-06 9.9189e-07 1.2861e-06
+    particle_25:
+      coords: -1.5536e-06 1.1283e-06 9.6010e-07
+    particle_26:
+      coords: -2.2879e-07 7.0183e-07 1.9637e-06
+    particle_27:
+      coords: -6.0181e-07 9.9328e-07 1.7318e-06
+    particle_28:
+      coords: -9.5042e-07 1.2261e-06 1.4122e-06
+    particle_29:
+      coords: -1.2438e-06 1.3678e-06 1.0416e-06
+    particle_30:
+      coords: -9.8492e-08 1.1568e-06 1.7316e-06
+    particle_31:
+      coords: -4.6277e-07 1.4215e-06 1.4532e-06
+    particle_32:
+      coords: -7.9828e-07 1.5972e-06 1.0911e-06
+    particle_33:
+      coords: 4.6613e-08 1.5501e-06 1.4119e-06
+    particle_34:
+      coords: -2.9455e-07 1.7609e-06 1.0909e-06
+    particle_35:
+      coords: 2.0070e-07 1.8373e-06 1.0411e-06
+    particle_36:
+      coords: -3.2027e-07 -2.3238e-07 2.0852e-06
+    particle_37:
+      coords: -7.0082e-07 -5.0892e-07 1.9055e-06
+    particle_38:
+      coords: -1.0653e-06 -7.7380e-07 1.6270e-06
+    particle_39:
+      coords: -1.3655e-06 -9.9195e-07 1.2865e-06
+    particle_40:
+      coords: -1.5533e-06 -1.1284e-06 9.6044e-07
+    particle_41:
+      coords: -7.3849e-07 -3.0569e-11 1.9640e-06
+    particle_42:
+      coords: -1.1309e-06 -2.6469e-07 1.7322e-06
+    particle_43:
+      coords: -1.4599e-06 -5.2431e-07 1.4127e-06
+    particle_44:
+      coords: -1.6853e-06 -7.5960e-07 1.0420e-06
+    particle_45:
+      coords: -1.1310e-06 2.6463e-07 1.7321e-06
+    particle_46:
+      coords: -1.4951e-06 -3.0569e-11 1.4538e-06
+    particle_47:
+      coords: -1.7658e-06 -2.6491e-07 1.0917e-06
+    particle_48:
+      coords: -1.4601e-06 5.2425e-07 1.4125e-06
+    particle_49:
+      coords: -1.7658e-06 2.6485e-07 1.0916e-06
+    particle_50:
+      coords: -1.6856e-06 7.5954e-07 1.0418e-06
+    particle_51:
+      coords: 1.2173e-07 -3.7598e-07 2.0852e-06
+    particle_52:
+      coords: 2.6725e-07 -8.2344e-07 1.9055e-06
+    particle_53:
+      coords: 4.0664e-07 -1.2520e-06 1.6270e-06
+    particle_54:
+      coords: 5.2145e-07 -1.6050e-06 1.2865e-06
+    particle_55:
+      coords: 5.9328e-07 -1.8258e-06 9.6044e-07
+    particle_56:
+      coords: -2.2839e-07 -7.0189e-07 1.9641e-06
+    particle_57:
+      coords: -9.7830e-08 -1.1569e-06 1.7323e-06
+    particle_58:
+      coords: 4.7483e-08 -1.5502e-06 1.4128e-06
+    particle_59:
+      coords: 2.0169e-07 -1.8374e-06 1.0421e-06
+    particle_60:
+      coords: -6.0131e-07 -9.9334e-07 1.7323e-06
+    particle_61:
+      coords: -4.6206e-07 -1.4216e-06 1.4539e-06
+    particle_62:
+      coords: -2.9370e-07 -1.7609e-06 1.0918e-06
+    particle_63:
+      coords: -9.4990e-07 -1.2262e-06 1.4128e-06
+    particle_64:
+      coords: -7.9761e-07 -1.5972e-06 1.0918e-06
+    particle_65:
+      coords: -1.2433e-06 -1.3679e-06 1.0421e-06
+    particle_66:
+      coords: 5.9663e-07 -4.3380e-07 1.9640e-06
+    particle_67:
+      coords: 1.0697e-06 -4.5036e-07 1.7321e-06
+    particle_68:
+      coords: 1.4887e-06 -4.3380e-07 1.4125e-06
+    particle_69:
+      coords: 1.8095e-06 -3.7598e-07 1.0418e-06
+    particle_70:
+      coords: 7.5871e-07 -8.7859e-07 1.7322e-06
+    particle_71:
+      coords: 1.2090e-06 -8.7859e-07 1.4538e-06
+    particle_72:
+      coords: 1.5838e-06 -8.2344e-07 1.0916e-06
+    particle_73:
+      coords: 8.7256e-07 -1.2821e-06 1.4127e-06
+    particle_74:
+      coords: 1.2725e-06 -1.2520e-06 1.0917e-06
+    particle_75:
+      coords: 9.1682e-07 -1.6050e-06 1.0420e-06
+    particle_76:
+      coords: 2.0072e-06 -2.3238e-07 6.4634e-07
+    particle_77:
+      coords: 2.0169e-06 -5.0892e-07 2.2542e-07
+    particle_78:
+      coords: 1.9311e-06 -7.7380e-07 -2.2536e-07
+    particle_79:
+      coords: 1.7610e-06 -9.9195e-07 -6.4632e-07
+    particle_80:
+      coords: 1.5536e-06 -1.1284e-06 -9.6016e-07
+    particle_81:
+      coords: 1.8579e-06 -7.0189e-07 6.7434e-07
+    particle_82:
+      coords: 1.8176e-06 -9.9334e-07 2.3693e-07
+    particle_83:
+      coords: 1.6880e-06 -1.2262e-06 -2.1792e-07
+    particle_84:
+      coords: 1.4879e-06 -1.3679e-06 -6.4629e-07
+    particle_85:
+      coords: 1.5923e-06 -1.1569e-06 6.8741e-07
+    particle_86:
+      coords: 1.5065e-06 -1.4216e-06 2.3698e-07
+    particle_87:
+      coords: 1.3329e-06 -1.5972e-06 -2.2528e-07
+    particle_88:
+      coords: 1.2418e-06 -1.5502e-06 6.7446e-07
+    particle_89:
+      coords: 1.1075e-06 -1.7609e-06 2.2558e-07
+    particle_90:
+      coords: 8.4143e-07 -1.8374e-06 6.4658e-07
+    particle_91:
+      coords: 2.0071e-06 2.3232e-07 6.4620e-07
+    particle_92:
+      coords: 2.0167e-06 5.0886e-07 2.2517e-07
+    particle_93:
+      coords: 1.9307e-06 7.7374e-07 -2.2569e-07
+    particle_94:
+      coords: 1.7606e-06 9.9189e-07 -6.4667e-07
+    particle_95:
+      coords: 1.5532e-06 1.1283e-06 -9.6050e-07
+    particle_96:
+      coords: 2.0860e-06 -3.0569e-11 2.1792e-07
+    particle_97:
+      coords: 2.0543e-06 2.6463e-07 -2.3699e-07
+    particle_98:
+      coords: 1.9159e-06 5.2425e-07 -6.7446e-07
+    particle_99:
+      coords: 1.6854e-06 7.5954e-07 -1.0420e-06
+    particle_100:
+      coords: 2.0544e-06 -2.6469e-07 -2.3687e-07
+    particle_101:
+      coords: 1.9685e-06 -3.0569e-11 -6.8735e-07
+    particle_102:
+      coords: 1.7658e-06 2.6485e-07 -1.0916e-06
+    particle_103:
+      coords: 1.9161e-06 -5.2431e-07 -6.7428e-07
+    particle_104:
+      coords: 1.7659e-06 -2.6491e-07 -1.0915e-06
+    particle_105:
+      coords: 1.6856e-06 -7.5960e-07 -1.0418e-06
+    particle_106:
+      coords: 1.8575e-06 7.0183e-07 6.7394e-07
+    particle_107:
+      coords: 1.5917e-06 1.1568e-06 6.8675e-07
+    particle_108:
+      coords: 1.2409e-06 1.5501e-06 6.7359e-07
+    particle_109:
+      coords: 8.4044e-07 1.8373e-06 6.4559e-07
+    particle_110:
+      coords: 1.8171e-06 9.9328e-07 2.3643e-07
+    particle_111:
+      coords: 1.5058e-06 1.4215e-06 2.3627e-07
+    particle_112:
+      coords: 1.1066e-06 1.7609e-06 2.2472e-07
+    particle_113:
+      coords: 1.6874e-06 1.2261e-06 -2.1845e-07
+    particle_114:
+      coords: 1.3322e-06 1.5972e-06 -2.2596e-07
+    particle_115:
+      coords: 1.4874e-06 1.3678e-06 -6.4678e-07
+    particle_116:
+      coords: 3.9844e-07 1.9809e-06 6.4559e-07
+    particle_117:
+      coords: 1.3854e-07 2.0754e-06 2.2472e-07
+    particle_118:
+      coords: -1.3976e-07 2.0754e-06 -2.2596e-07
+    particle_119:
+      coords: -3.9961e-07 1.9809e-06 -6.4678e-07
+    particle_120:
+      coords: -5.9332e-07 1.8257e-06 -9.6050e-07
+    particle_121:
+      coords: 6.4392e-07 1.9839e-06 2.1729e-07
+    particle_122:
+      coords: 3.8258e-07 2.0354e-06 -2.3746e-07
+    particle_123:
+      coords: 9.3075e-08 1.9839e-06 -6.7475e-07
+    particle_124:
+      coords: -2.0177e-07 1.8373e-06 -1.0422e-06
+    particle_125:
+      coords: 8.8605e-07 1.8718e-06 -2.3746e-07
+    particle_126:
+      coords: 6.0798e-07 1.8718e-06 -6.8777e-07
+    particle_127:
+      coords: 2.9359e-07 1.7609e-06 -1.0919e-06
+    particle_128:
+      coords: 1.0905e-06 1.6599e-06 -6.7475e-07
+    particle_129:
+      coords: 7.9750e-07 1.5972e-06 -1.0919e-06
+    particle_130:
+      coords: 1.2432e-06 1.3678e-06 -1.0422e-06
+    particle_131:
+      coords: -9.4223e-08 1.9839e-06 6.7359e-07
+    particle_132:
+      coords: -6.0899e-07 1.8718e-06 6.8675e-07
+    particle_133:
+      coords: -1.0913e-06 1.6599e-06 6.7394e-07
+    particle_134:
+      coords: -1.4879e-06 1.3678e-06 6.4620e-07
+    particle_135:
+      coords: -3.8375e-07 2.0354e-06 2.3627e-07
+    particle_136:
+      coords: -8.8707e-07 1.8718e-06 2.3643e-07
+    particle_137:
+      coords: -1.3330e-06 1.5972e-06 2.2517e-07
+    particle_138:
+      coords: -6.4507e-07 1.9839e-06 -2.1845e-07
+    particle_139:
+      coords: -1.1076e-06 1.7609e-06 -2.2569e-07
+    particle_140:
+      coords: -8.4151e-07 1.8373e-06 -6.4667e-07
+    particle_141:
+      coords: -1.7610e-06 9.9189e-07 6.4634e-07
+    particle_142:
+      coords: -1.9310e-06 7.7374e-07 2.2542e-07
+    particle_143:
+      coords: -2.0168e-06 5.0886e-07 -2.2536e-07
+    particle_144:
+      coords: -2.0072e-06 2.3232e-07 -6.4632e-07
+    particle_145:
+      coords: -1.9194e-06 -3.0569e-11 -9.6016e-07
+    particle_146:
+      coords: -1.6879e-06 1.2261e-06 2.1792e-07
+    particle_147:
+      coords: -1.8175e-06 9.9328e-07 -2.3687e-07
+    particle_148:
+      coords: -1.8579e-06 7.0183e-07 -6.7428e-07
+    particle_149:
+      coords: -1.8094e-06 3.7592e-07 -1.0418e-06
+    particle_150:
+      coords: -1.5065e-06 1.4215e-06 -2.3699e-07
+    particle_151:
+      coords: -1.5923e-06 1.1568e-06 -6.8735e-07
+    particle_152:
+      coords: -1.5837e-06 8.2338e-07 -1.0915e-06
+    particle_153:
+      coords: -1.2418e-06 1.5501e-06 -6.7446e-07
+    particle_154:
+      coords: -1.2725e-06 1.2520e-06 -1.0916e-06
+    particle_155:
+      coords: -9.1679e-07 1.6050e-06 -1.0420e-06
+    particle_156:
+      coords: -1.9160e-06 5.2425e-07 6.7434e-07
+    particle_157:
+      coords: -1.9684e-06 -3.0569e-11 6.8741e-07
+    particle_158:
+      coords: -1.9159e-06 -5.2431e-07 6.7446e-07
+    particle_159:
+      coords: -1.7607e-06 -9.9195e-07 6.4658e-07
+    particle_160:
+      coords: -2.0543e-06 2.6463e-07 2.3693e-07
+    particle_161:
+      coords: -2.0542e-06 -2.6469e-07 2.3698e-07
+    particle_162:
+      coords: -1.9308e-06 -7.7380e-07 2.2558e-07
+    particle_163:
+      coords: -2.0860e-06 -3.0569e-11 -2.1792e-07
+    particle_164:
+      coords: -2.0168e-06 -5.0892e-07 -2.2528e-07
+    particle_165:
+      coords: -2.0071e-06 -2.3238e-07 -6.4629e-07
+    particle_166:
+      coords: -1.4876e-06 -1.3679e-06 6.4659e-07
+    particle_167:
+      coords: -1.3326e-06 -1.5972e-06 2.2560e-07
+    particle_168:
+      coords: -1.1071e-06 -1.7609e-06 -2.2526e-07
+    particle_169:
+      coords: -8.4110e-07 -1.8374e-06 -6.4627e-07
+    particle_170:
+      coords: -5.9295e-07 -1.8258e-06 -9.6013e-07
+    particle_171:
+      coords: -1.6877e-06 -1.2262e-06 2.1820e-07
+    particle_172:
+      coords: -1.5062e-06 -1.4216e-06 -2.3670e-07
+    particle_173:
+      coords: -1.2415e-06 -1.5502e-06 -6.7418e-07
+    particle_174:
+      coords: -9.1652e-07 -1.6050e-06 -1.0417e-06
+    particle_175:
+      coords: -1.8173e-06 -9.9334e-07 -2.3670e-07
+    particle_176:
+      coords: -1.5921e-06 -1.1569e-06 -6.8718e-07
+    particle_177:
+      coords: -1.2723e-06 -1.2520e-06 -1.0914e-06
+    particle_178:
+      coords: -1.8578e-06 -7.0189e-07 -6.7419e-07
+    particle_179:
+      coords: -1.5836e-06 -8.2344e-07 -1.0914e-06
+    particle_180:
+      coords: -1.8094e-06 -3.7598e-07 -1.0418e-06
+    particle_181:
+      coords: -1.0907e-06 -1.6599e-06 6.7450e-07
+    particle_182:
+      coords: -6.0824e-07 -1.8719e-06 6.8750e-07
+    particle_183:
+      coords: -9.3311e-08 -1.9840e-06 6.7450e-07
+    particle_184:
+      coords: 3.9944e-07 -1.9810e-06 6.4659e-07
+    particle_185:
+      coords: -8.8647e-07 -1.8719e-06 2.3703e-07
+    particle_186:
+      coords: -3.8299e-07 -2.0355e-06 2.3703e-07
+    particle_187:
+      coords: 1.3941e-07 -2.0754e-06 2.2560e-07
+    particle_188:
+      coords: -6.4449e-07 -1.9840e-06 -2.1787e-07
+    particle_189:
+      coords: -1.3907e-07 -2.0754e-06 -2.2526e-07
+    particle_190:
+      coords: -3.9910e-07 -1.9810e-06 -6.4627e-07
+    particle_191:
+      coords: 6.4483e-07 -1.9840e-06 2.1820e-07
+    particle_192:
+      coords: 8.8681e-07 -1.8719e-06 -2.3670e-07
+    particle_193:
+      coords: 1.0910e-06 -1.6599e-06 -6.7419e-07
+    particle_194:
+      coords: 1.2436e-06 -1.3679e-06 -1.0418e-06
+    particle_195:
+      coords: 3.8334e-07 -2.0355e-06 -2.3670e-07
+    particle_196:
+      coords: 6.0858e-07 -1.8719e-06 -6.8718e-07
+    particle_197:
+      coords: 7.9793e-07 -1.5972e-06 -1.0914e-06
+    particle_198:
+      coords: 9.3652e-08 -1.9840e-06 -6.7418e-07
+    particle_199:
+      coords: 2.9402e-07 -1.7609e-06 -1.0914e-06
+    particle_200:
+      coords: -2.0136e-07 -1.8374e-06 -1.0417e-06
+    particle_201:
+      coords: 1.3656e-06 9.9189e-07 -1.2864e-06
+    particle_202:
+      coords: 1.0654e-06 7.7374e-07 -1.6269e-06
+    particle_203:
+      coords: 7.0090e-07 5.0886e-07 -1.9055e-06
+    particle_204:
+      coords: 3.2029e-07 2.3232e-07 -2.0852e-06
+    particle_205:
+      coords: 4.8694e-10 -3.0569e-11 -2.1471e-06
+    particle_206:
+      coords: 1.4600e-06 5.2425e-07 -1.4127e-06
+    particle_207:
+      coords: 1.1309e-06 2.6463e-07 -1.7322e-06
+    particle_208:
+      coords: 7.3850e-07 -3.0569e-11 -1.9640e-06
+    particle_209:
+      coords: 3.2032e-07 -2.3238e-07 -2.0852e-06
+    particle_210:
+      coords: 1.4952e-06 -3.0569e-11 -1.4538e-06
+    particle_211:
+      coords: 1.1310e-06 -2.6469e-07 -1.7321e-06
+    particle_212:
+      coords: 7.0097e-07 -5.0892e-07 -1.9054e-06
+    particle_213:
+      coords: 1.4601e-06 -5.2431e-07 -1.4125e-06
+    particle_214:
+      coords: 1.0656e-06 -7.7380e-07 -1.6268e-06
+    particle_215:
+      coords: 1.3658e-06 -9.9195e-07 -1.2862e-06
+    particle_216:
+      coords: 9.4991e-07 1.2261e-06 -1.4128e-06
+    particle_217:
+      coords: 4.6207e-07 1.4215e-06 -1.4540e-06
+    particle_218:
+      coords: -4.7471e-08 1.5501e-06 -1.4128e-06
+    particle_219:
+      coords: -5.2143e-07 1.6050e-06 -1.2864e-06
+    particle_220:
+      coords: 6.0138e-07 9.9328e-07 -1.7322e-06
+    particle_221:
+      coords: 9.7899e-08 1.1568e-06 -1.7322e-06
+    particle_222:
+      coords: -4.0656e-07 1.2520e-06 -1.6269e-06
+    particle_223:
+      coords: 2.2846e-07 7.0183e-07 -1.9641e-06
+    particle_224:
+      coords: -2.6718e-07 8.2338e-07 -1.9055e-06
+    particle_225:
+      coords: -1.2171e-07 3.7592e-07 -2.0852e-06
+    particle_226:
+      coords: 9.5019e-07 -1.2262e-06 -1.4125e-06
+    particle_227:
+      coords: 6.0155e-07 -9.9334e-07 -1.7321e-06
+    particle_228:
+      coords: 2.2855e-07 -7.0189e-07 -1.9640e-06
+    particle_229:
+      coords: -1.2167e-07 -3.7598e-07 -2.0852e-06
+    particle_230:
+      coords: 4.6236e-07 -1.4216e-06 -1.4537e-06
+    particle_231:
+      coords: 9.8078e-08 -1.1569e-06 -1.7321e-06
+    particle_232:
+      coords: -2.6708e-07 -8.2344e-07 -1.9054e-06
+    particle_233:
+      coords: -4.7184e-08 -1.5502e-06 -1.4125e-06
+    particle_234:
+      coords: -4.0639e-07 -1.2520e-06 -1.6268e-06
+    particle_235:
+      coords: -5.2115e-07 -1.6050e-06 -1.2862e-06
+    particle_236:
+      coords: -8.7249e-07 1.2821e-06 -1.4127e-06
+    particle_237:
+      coords: -1.2090e-06 8.7853e-07 -1.4538e-06
+    particle_238:
+      coords: -1.4886e-06 4.3374e-07 -1.4125e-06
+    particle_239:
+      coords: -1.6872e-06 -3.0569e-11 -1.2862e-06
+    particle_240:
+      coords: -7.5864e-07 8.7853e-07 -1.7322e-06
+    particle_241:
+      coords: -1.0697e-06 4.5030e-07 -1.7321e-06
+    particle_242:
+      coords: -1.3160e-06 -3.0569e-11 -1.6268e-06
+    particle_243:
+      coords: -5.9662e-07 4.3374e-07 -1.9640e-06
+    particle_244:
+      coords: -8.6534e-07 -3.0569e-11 -1.9054e-06
+    particle_245:
+      coords: -3.9484e-07 -3.0569e-11 -2.0852e-06
+    particle_246:
+      coords: -1.4886e-06 -4.3380e-07 -1.4125e-06
+    particle_247:
+      coords: -1.2089e-06 -8.7859e-07 -1.4537e-06
+    particle_248:
+      coords: -8.7231e-07 -1.2821e-06 -1.4125e-06
+    particle_249:
+      coords: -1.0697e-06 -4.5036e-07 -1.7321e-06
+    particle_250:
+      coords: -7.5854e-07 -8.7859e-07 -1.7321e-06
+    particle_251:
+      coords: -5.9658e-07 -4.3380e-07 -1.9640e-06
