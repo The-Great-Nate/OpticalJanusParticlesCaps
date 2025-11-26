@@ -16,7 +16,7 @@ from pyoptics import dipoles
 from pyoptics import readyaml
 from pyoptics import hydro
 from pyoptics import constants as ct
-
+from scipy.spatial.transform import Rotation
 
 def perform_simulation(number_of_particles, positions, sphere_radius, dipole_radius):
 
@@ -89,6 +89,14 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
     #
     dipole_primitive = dipoles.sphere_positions(sphere_radius, dipole_radius)
     print(dipole_primitive.shape)
+    
+    '''
+    Now calculate new dipole rotations and store it
+    So store dipole_primitive and tipole_primitive t-1 separate for each particle
+    
+    '''
+
+    
     #
     #=========================================================
     # Output options
@@ -115,8 +123,17 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         # All changes inside optical_force_array().
         #
         #optical,couples = optical_force_array(position_vectors, E0, dipole_radius, dipole_primitive)
+        if i == 0:
+            rotated_dipoles = dipole_primitive
+            
+        test_rot = Rotation.from_rotvec([np.pi/300, np.pi/600, np.pi/400])
+        test_rot.as_matrix()
+        rotated_dipoles = test_rot.apply(rotated_dipoles)
+        
         optical, torques, couples, dipole_positions = dipoles.py_optical_force_torque_array(position_vectors, dipole_radius, dipole_primitive, inverse_polarizability, beam_collection)
+        
 
+        
         #couples = None
         #include_couple==False
         #if excel_output==True:
@@ -296,7 +313,21 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
             new_positions[1,2] = z_com+myradius*np.sin(theta+np.pi)
 
 
-
+        elif dynamics_method == "NOTHING":
+            new_positions = position_vectors
+            pass
+        
+        '''
+        It's not complicated to store the amount of rotation in each timestep
+        and rot commutitivititytyty should not matter bc timestep is small
+        
+        Can this work if we never store actual rotation of lab frame of each particle
+        at a given timestep? But only store change in rot per timestep
+        
+        1 Set of dipole pos for each particle
+        Every timestep - apply neccessary rotation to that object
+        When forces are calculated, make ref to rhat object.
+        '''
         
         #new_positions_list = np.hsplit(new_positions, number_of_particles)
         #new_positions_array = np.zeros((number_of_particles,3), dtype=np.float64)
@@ -304,6 +335,7 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         #for j in range(len(new_positions_list)):
         #    new_positions_array[j] = new_positions_list[j]
         position_vectors = new_positions
+        dipole_positions = rotated_dipoles + position_vectors
         dipole_positions_all[i] = dipole_positions
         #dipole_positions_all
         vectors_list.append(position_vectors)  # returns list of position vector arrays of all particles
@@ -317,7 +349,6 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
     if dynamics_method=='BD_TRANS_SHAKE_HI' or dynamics_method=='SHAKE_HI':
         print("Mean separation: ",np.mean(final_separation_list))
         #print(separation_list)
-
     return xyz_list1,optpos,optforce,optcouple,dipole_positions_all
 
 

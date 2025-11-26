@@ -1,0 +1,54 @@
+simulation:
+  frames: 2000
+  include_dynamics: True
+  dynamics_method: NOTHING
+  include_springs: False
+  include_bending: False
+  include_nonbonded: False
+  include_optics: False
+  optics_method: SH_DDA
+parameters:
+  wavelength: 0.785e-6 # meters in vacuum
+  dipole_radius: 169e-9 # meters
+  time_step: 1e-4 # seconds
+output:
+  vmd_output: False
+  excel_output: False
+  hdf_output: True
+  include_force: True
+  include_couple: False
+display:
+  show_output: True
+  frame_interval: 10
+  max_size: 20e-6 # range will be 2 times this
+  resolution: 201 # number of points in each direction of plot
+  frame_min: 0 # starting frame for animation
+  frame_max: 5000 # will default to number of frames
+  z_offset: 0.0e-6
+beams:
+  beam_1:
+    beamtype: BEAMTYPE_GAUSS_CSP # parameter
+    E0: 3.000e+06
+    w0: 3.44 # fraction of wavelength
+    translation: 0.0 0.0 -50e-6 # translation in meters or None
+    rotation: 0.0 0.0 # x rotation followed by z rotation in degrees or None
+#  beam_2:
+#    beamtype: BEAMTYPE_GAUSS_CSP # parameter
+#    E0: 4.000e+06
+#    w0: 3.44 # fraction of wavelength
+#    translation: 0.0 0.0 -5e-5 # translation in meters or None
+#    rotation: 180.0 0.0 # x rotation followed by z rotation in degrees or None
+particles:
+  default_radius: 10e-07
+  default_material: FusedSilica
+  particle_list:
+    particle_0:
+      coords: -5.3348e-10 -3.0569e-11 2.1470e-06
+    #particle_1:
+    #  coords: 1.2150e-07 3.7592e-07 2.0850e-06
+    #particle_2:
+    #  coords: 2.6673e-07 8.2338e-07 1.9050e-06
+    #particle_3:
+    #  coords: 4.0586e-07 1.2520e-06 1.6262e-06
+    #particle_4:
+    #  coords: 5.2049e-07 1.6050e-06 1.2855e-06
