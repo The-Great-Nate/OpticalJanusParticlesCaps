@@ -72,7 +72,7 @@ class DisplayObject (object):
         return fig,ax
 
 
-    def plot_parpoles(self,fig,ax,particle_positions,dipole_positions,radius,colors):
+    def plot_parpoles(self,fig,ax,particle_positions,dipole_positions,radius,colors, dipole_above_zero,dipole_below_zero):
         n_particles = len(colors)
         marker_size_particles = (1.25*10.0*(radius/200e-9)*(5e-6/self.max_size))
         self.particles_positions = particle_positions
@@ -94,8 +94,12 @@ class DisplayObject (object):
         for i in range(n_particles_dipoles):
             for die in range(self.dipoles_per_particle):
                 colors = ["blue", "magenta"]
+                if die in dipole_above_zero:
+                    col = "blue"
+                elif die in dipole_below_zero:
+                    col = "magenta"
                 marker = ax.plot([], [], marker="s", markersize=marker_size_dipoles,
-                                c=colors[i], alpha=1, animated=True, linestyle="None")[0]
+                                c=col, alpha=1, animated=True, linestyle="None")[0]
                 self.dipoles_trajectories.append(marker)
 
         def init_anim():

@@ -125,8 +125,16 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         #optical,couples = optical_force_array(position_vectors, E0, dipole_radius, dipole_primitive)
         if i == 0:
             rotated_dipoles = dipole_primitive
+            dipole_above_zero = []
+            dipole_below_zero = []
+            for di_ind, dipole in enumerate(rotated_dipoles):
+                if dipole[0] > 0:
+                    dipole_above_zero.append(di_ind)
+                else:
+                    dipole_below_zero.append(di_ind)
+                    
             
-        test_rot = Rotation.from_rotvec([np.pi/300, np.pi/600, np.pi/400])
+        test_rot = Rotation.from_rotvec([np.pi/3000, np.pi/6000, np.pi/4000])
         test_rot.as_matrix()
         rotated_dipoles = test_rot.apply(rotated_dipoles)
         
@@ -349,7 +357,7 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
     if dynamics_method=='BD_TRANS_SHAKE_HI' or dynamics_method=='SHAKE_HI':
         print("Mean separation: ",np.mean(final_separation_list))
         #print(separation_list)
-    return xyz_list1,optpos,optforce,optcouple,dipole_positions_all
+    return xyz_list1,optpos,optforce,optcouple,dipole_positions_all,dipole_above_zero,dipole_below_zero
 
 
 
@@ -454,7 +462,7 @@ z_offset = 0.0 # for most other situations
 #===========================================================================
 
 initialT = time.time()
-particles,optpos, optforces,optcouples,dipole_positions = perform_simulation(n_particles, positions, radius, dipole_radius)
+particles,optpos, optforces,optcouples,dipole_positions,dipole_above_zero,dipole_below_zero = perform_simulation(n_particles, positions, radius, dipole_radius)
 finalT = time.time()
 print("Elapsed time: {:8.6f} s".format(finalT-initialT))
 
@@ -466,7 +474,7 @@ if display.show_output==True:
 
     fig,ax = display.plot_intensity(beam_collection)
 
-    parpole_ani = display.plot_parpoles(fig,ax,particles,dipole_positions,radius,colors)
+    parpole_ani = display.plot_parpoles(fig,ax,particles,dipole_positions,radius,colors,dipole_above_zero,dipole_below_zero)
     #particle_ani = display.animate_particles(fig,ax,particles,radius,colors)
     #dipole_ani = display.animate_dipoles(fig,ax,dipole_positions,radius,colors)
     #particle_ani = display.animate_particles(fig,ax,particles,radius,colors)
