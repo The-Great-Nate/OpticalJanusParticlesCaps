@@ -286,6 +286,26 @@ def trans_bd_hi(position_vectors, radius, total_force_array, number_of_particles
         new_positions_array[j] = new_positions_list[j]
     return new_positions_array
 
+def trans_bd_hi_no_brownian(position_vectors, radius, total_force_array, number_of_particles, timestep, tensor_choice='OSEEN', wall_height=0.0):
+    """
+    'trans_bd_hi'
+    Performs one time step of translational Brownian dynamics with HI.
+    """
+    mean = np.zeros(number_of_particles * 3)
+    D,_ = diffusion_matrix(position_vectors, radius, tensor_choice, wall_height)
+    F = np.hstack(total_force_array)
+    #
+    cov = 2 * timestep * D
+    R = np.random.multivariate_normal(mean, cov)
+    SumDijFj = (1 / (ct.k_B * ct.temperature)) * np.dot(D, F)
+    positions_stacked = np.hstack(position_vectors)
+    new_positions = positions_stacked + SumDijFj * timestep + 0
+    new_positions_list = np.hsplit(new_positions, number_of_particles)
+    new_positions_array = np.zeros((number_of_particles,3), dtype=np.float64)
+    for j in range(len(new_positions_list)):
+        new_positions_array[j] = new_positions_list[j]
+    return new_positions_array
+
 
 def trans_bd_shake_hi(position_vectors, radius, total_force_array, number_of_particles, timestep, separation_list, particle_separation, constraints, tensor_choice='OSEEN', wall_height=0.0):
     """

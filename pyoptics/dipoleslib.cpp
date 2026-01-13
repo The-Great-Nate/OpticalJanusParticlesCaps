@@ -180,452 +180,9 @@ void grad_E_cc(double *rvec, double *pvec, double kvec, double *gradEE)
 
 
 //======================================================================================
-void optical_force_array(double *array_of_particles,int number_of_particles, double dipole_radius, double* dipole_primitive, int number_of_dipoles_in_primitive, double* inv_polar, BEAM_COLLECTION* beam_collection, double* final_optical_forces){
-    //
-    // array _of_particles is (Np,3) list of positions
-    // dipole_primitive is (Nd,3) list of positions
-    //
-    // Need to:
-    // (0) change array_of_positions to array of particle positions
-    // (1) generate a full list of dipole positions
-    // (2) do the optical force calculation on the full list
-    // (3) construct the forces on the individual particles
-    //
-    // A quick line to remap the inverse polars to complex variables.
-    //
-    Eigen::Map<Eigen::VectorXcd> inverse_polars((std::complex<double>*)(inv_polar), number_of_particles);
-    //Eigen::VectorXcd inverse_polars(number_of_particles);
-    int i, j, ij, ti, tj;
-    int num_beams;
-    double rvec[3], kvec;
-    double pvec[6];
-    double xx, yy, zz;
-    //for (i=0; i<number_of_particles; i++){
-    //    inverse_polars(i) = inv_polar[2*i] + inv_polar[2*i+1]*1i;
-    //}
-    //std::cout<<array_of_particles[0]<<" "<<array_of_particles[1]<<" "<<array_of_particles[2]<<endl;
-    //std::cout<<dipole_primitive[0]<<" "<<dipole_primitive[1]<<" "<<dipole_primitive[2]<<endl;
-    // Here is section (0):
-    //
-    //number_of_particles = len(array_of_particles)
-    //number_of_dipoles_in_primitive = len(dipole_primitive)
-    //number_of_dipoles = number_of_particles*number_of_dipoles_in_primitive
-    int number_of_dipoles = number_of_particles*number_of_dipoles_in_primitive;
-    //std::cout<<number_of_dipoles<<std::endl;
-    //
-    // Here is section (1):
-    //
-    // These are positions for ALL dipoles:
-    //array_of_positions = np.zeros((number_of_dipoles, 3))
-    Eigen::MatrixXd array_of_positions(number_of_dipoles, 3);
-    //std::cout<<"Created position array"<<std::endl;
-    //std::cout<<beam_collection->BEAM_ARRAY[0].E0<<std::endl;
-    for (i=0; i<number_of_particles; i++){
-        for (j=0; j<number_of_dipoles_in_primitive; j++){
-            for (ij=0; ij<3; ij++){
-                array_of_positions(i*number_of_dipoles_in_primitive+j,ij) = array_of_particles[i*3+ij] + dipole_primitive[j*3+ij];
-                //std::cout<<i<<j<<ij<<array_of_positions(i*number_of_dipoles_in_primitive+j,ij)<<std::endl;
-            }
-        }
-    }
-    //std::cout<<"Position array: "<<array_of_positions<<endl;
-    //
-    // Here is section (2):
-    //
-    Eigen::MatrixXcd p_array(number_of_dipoles, 3);
-    //std::cout<<"Check before"<<std::endl;
-
-    p_array = dipole_moment_array(array_of_positions, number_of_dipoles, dipole_radius, number_of_dipoles_in_primitive, inverse_polars, beam_collection);
-    //std::cout<<"Check after"<<std::endl;
-    //std::cout<<"P array: "<<p_array<<endl;
-//# print(p_array)
-    //
-    // Having found the polarisation array, need to calculate the gradients of
-    // the dipole fields.
-    //
-    //displacements_matrix = displacement_matrix(array_of_positions)
-    //grad_matrix = np.zeros([number_of_dipoles, number_of_dipoles], dtype=object)
-    Eigen::MatrixXcd grad_matrix_T(3*number_of_dipoles,3*number_of_dipoles);
-    //
-    // Working directly with the transpose as the un-transposed matrix is not needed.
-    //
-    //for i in range(number_of_dipoles):
-    //for j in range(number_of_dipoles):
-    //if i == j:
-    //grad_matrix[i][j] = 0
-    //else:
-    //grad_matrix[i][j] = Dipoles.py_grad_E_cc(displacements_matrix[i][j], p_array[i], k)
-    Eigen::Matrix3cd Gradiiblock=Eigen::Matrix3cd::Zero();
-    Eigen::Matrix3cd Gradijblock;
-    double gradEE[18]; // to hold 9 complex values
-    kvec = beam_collection->BEAM_ARRAY[0].k; // (scalar) assuming same for all beams!
-    for (i=0; i<number_of_dipoles; i++){
-        ti = 3*i;
-        pvec[0] = p_array(i,0).real();
-        pvec[1] = p_array(i,0).imag();
-        pvec[2] = p_array(i,1).real();
-        pvec[3] = p_array(i,1).imag();
-        pvec[4] = p_array(i,2).real();
-        pvec[5] = p_array(i,2).imag();
-        for (j=0; j<number_of_dipoles; j++){
-            tj = 3*j;
-            if (i==j){ // All zeros here
-                grad_matrix_T.block<3,3>(ti,ti) = Gradiiblock;
-            }
-            else{ // Compute the matrix
-                rvec[0] = array_of_positions(i,0) - array_of_positions(j,0);
-                rvec[1] = array_of_positions(i,1) - array_of_positions(j,1);
-                rvec[2] = array_of_positions(i,2) - array_of_positions(j,2);
-                grad_E_cc(rvec, pvec, kvec, gradEE);
-                Eigen::Map<Eigen::Matrix3cd> Gradijblock((std::complex<double>*)(gradEE), 3, 3);
-                // Note Gradijblock is column-major so already transposed, so will need to
-                // modify the force calculation!
-                // Apparently all Eigen matrices are stored column-major by default so may
-                // need a rethink on some of the working.
-                // I'm wondering if we even need to store this huge matrix?
-                grad_matrix_T.block<3,3>(tj,ti) = Gradijblock.transpose();
-            }
-        }
-    }
-            //grad_matrix_T = np.transpose(grad_matrix)
-            //#print("Array of particles:",array_of_positions)
-            //#print("Displacements of particles:",displacements_matrix)
-            //#print("dipole vectors:",p_array)
-            //#print("Gradient matrix:",grad_matrix)
-            //#print("Gradient matrix T:",grad_matrix_T)
-            
-    //optical_force_matrix = np.zeros([number_of_dipoles, number_of_dipoles], dtype=object)
-    Eigen::MatrixXd optical_force_array=Eigen::MatrixXd::Zero(number_of_dipoles,3);
-    Eigen::Vector3cd one_polar;
-    //for i in range(number_of_dipoles):
-    //for j in range(number_of_dipoles):
-    //if i == j:
-    //optical_force_matrix[i][j] = np.zeros(3)
-    //else:
-    //optical_force_matrix[i][j] = optical_force(
-    //                                           grad_matrix_T[i][j], p_array[i]  # TRANSPOSE INPUT!!!!
-    //                                           )
-    for (i=0; i<number_of_dipoles; i++){
-        ti = 3*i;
-        one_polar = p_array.row(i);
-        for (j=0; j<number_of_dipoles; j++){
-            tj = 3*j;
-            if (i!=j){ // Compute the matrix
-                Gradijblock = grad_matrix_T.block<3,3>(ti,tj);
-                //std::cout<<i<<" "<<j<<" "<<Gradijblock<<endl;
-                optical_force_array.row(i) += 0.5*(Gradijblock*one_polar).real();
-                // Need to check the ordering of above - has it computed correctly? - Yes
-            }
-        }
-    }
-    
-    //std::cout<<"Optical force array scat:"<<endl;
-    //std::cout<<optical_force_array<<endl;
-    //optical_force_array_scat = np.sum(optical_force_matrix, axis=1)
-
-    //grad_E_inc = np.zeros(number_of_dipoles, dtype=object)
-    //optical_force_array_inc = np.zeros(number_of_dipoles, dtype=object)
-    //for i in range(number_of_dipoles):
-    //gradE = np.zeros((3,3),dtype=np.complex128)
-    //Beams.all_incident_field_gradients(array_of_positions[i], beam_collection, gradE)
-    num_beams = beam_collection->beams;
-
-    //for i in range(nn):
-    //    Beams.compute_field_gradients(x, y, z, the_beams[i], dgradEE)
-    //    for j in range(3):
-    //        for l in range(3):
-    //            gradEE[j][l] += complex(dgradEE[(j*3+l)*2],-dgradEE[(j*3+l)*2+1]) # conjugate
-    double dgradEE[18];
-    Eigen::Matrix3cd dgradEEmat, grad_E_inc;
-    for (i=0; i<number_of_dipoles; i++){
-        xx = array_of_positions(i,0);
-        yy = array_of_positions(i,1);
-        zz = array_of_positions(i,2);
-        grad_E_inc = Eigen::Matrix3cd::Zero();
-        for (j=0; j<num_beams; j++){
-            compute_field_gradients(xx, yy, zz, &beam_collection->BEAM_ARRAY[j], dgradEE);
-            Eigen::Map<Eigen::Matrix3cd> dgradEEmat((std::complex<double>*)(dgradEE), 3, 3);
-            grad_E_inc += dgradEEmat.conjugate(); // conjugated!
-        }
-        one_polar = p_array.row(i);
-        optical_force_array.row(i) += 0.5*(grad_E_inc*one_polar).real();
-    }
-    
-//    grad_E_inc[i] = gradE
-//#        grad_E_inc[i] = incident_field_gradient(beam, array_of_positions[i])
-//    optical_force_array_inc[i] = optical_force(
-//                                               np.transpose(grad_E_inc[i]), p_array[i]
-//                                               )
-//    optical_force_array_tot = optical_force_array_scat + optical_force_array_inc
- 
-    //
-    // This is section (3): Summing the dipole forces for each particle.
-    //
-    for (i=0; i<number_of_particles; i++){
-        final_optical_forces[i*3] = 0.0;
-        final_optical_forces[i*3+1] = 0.0;
-        final_optical_forces[i*3+2] = 0.0;
-        for (j=0; j<number_of_dipoles_in_primitive; j++){
-            final_optical_forces[i*3] += optical_force_array(i*number_of_dipoles_in_primitive+j,0);
-            final_optical_forces[i*3+1] += optical_force_array(i*number_of_dipoles_in_primitive+j,1);
-            final_optical_forces[i*3+2] += optical_force_array(i*number_of_dipoles_in_primitive+j,2);
-        }
-    }
-    //final_optical_forces = np.zeros(number_of_particles, dtype=object)
-    //for i in range(number_of_particles):
-    //final_optical_forces[i] = np.sum(optical_force_array_tot[i*number_of_dipoles_in_primitive:(i+1)*number_of_dipoles_in_primitive],axis=0)
-//#print(optical_force_array_tot)
-//#print(final_optical_forces)
-//    return final_optical_forces
-
-    return;
- }
 
 //======================================================================================
-void optical_force_array_precomp(double *array_of_particles,int number_of_particles, double dipole_radius, double* dipole_primitive, int number_of_dipoles_in_primitive, double* dpl_moments_unwrap, int num_dpl_moments, BEAM_COLLECTION* beam_collection, double* final_optical_forces){
-    //
-    // array _of_particles is (Np,3) list of positions
-    // dipole_primitive is (Nd,3) list of positions
-    //
-    // Need to:
-    // (0) change array_of_positions to array of particle positions
-    // (1) generate a full list of dipole positions
-    // (2) do the optical force calculation on the full list
-    // (3) construct the forces on the individual particles
-    //
-    int i, j, ij, ti, tj;
-    int num_beams;
-    double kvec;
-    double xx, yy, zz;
-    //for (i=0; i<number_of_particles; i++){
-    //    inverse_polars(i) = inv_polar[2*i] + inv_polar[2*i+1]*1i;
-    //}
-    //std::cout<<array_of_particles[0]<<" "<<array_of_particles[1]<<" "<<array_of_particles[2]<<endl;
-    //std::cout<<dipole_primitive[0]<<" "<<dipole_primitive[1]<<" "<<dipole_primitive[2]<<endl;
-    // Here is section (0):
-    //
-    //number_of_particles = len(array_of_particles)
-    //number_of_dipoles_in_primitive = len(dipole_primitive)
-    //number_of_dipoles = number_of_particles*number_of_dipoles_in_primitive
-    int number_of_dipoles = number_of_particles*number_of_dipoles_in_primitive;
-    //std::cout<<number_of_dipoles<<std::endl;
-    //
-    // Here is section (1):
-    //
-    // These are positions for ALL dipoles:
-    //array_of_positions = np.zeros((number_of_dipoles, 3))
-    Eigen::MatrixXd array_of_positions(number_of_dipoles, 3);
-    //std::cout<<"Created position array"<<std::endl;
-    //std::cout<<beam_collection->BEAM_ARRAY[0].E0<<std::endl;
-    for (i=0; i<number_of_particles; i++){
-        for (j=0; j<number_of_dipoles_in_primitive; j++){
-            for (ij=0; ij<3; ij++){
-                array_of_positions(i*number_of_dipoles_in_primitive+j,ij) = array_of_particles[i*3+ij] + dipole_primitive[j*3+ij];
-                //std::cout<<i<<j<<ij<<array_of_positions(i*number_of_dipoles_in_primitive+j,ij)<<std::endl;
-            }
-        }
-    }
-    //std::cout<<"Position array: "<<array_of_positions<<endl;
-    //
-    // Here is section (2):
-    //
-    // Setup the array for dipole moments, to be filled in later
-    //
-    Eigen::MatrixXcd p_array(number_of_dipoles, 3);
-    //std::cout<<"Check before"<<std::endl;
-    //
-    // Set up the dipole moment array from data instead of calculating it.
-    //p_array = dipole_moment_array(array_of_positions, number_of_dipoles, dipole_radius, number_of_dipoles_in_primitive, inverse_polars, beam_collection);
-    //
-    //std::cout<<"Checking dpls:"<<std::endl;
-    for (i=0; i<number_of_dipoles; i++) {
-        for (j=0; j<3; j++) {
-            p_array(i,j) = dpl_moments_unwrap[i*6+j*2] + 1i*dpl_moments_unwrap[i*6+j*2+1];
-            //std::cout<<i<<" "<<j<<" "<<p_array(i,j)<<std::endl;
-        }
-    }
-    //
-    //std::cout<<"Check after"<<std::endl;
-    //std::cout<<"P array: "<<p_array<<endl;
-    //
-    // Having found the polarisation array, need to calculate the gradients of
-    // the dipole fields.
-    //
-    //displacements_matrix = displacement_matrix(array_of_positions)
-    //grad_matrix = np.zeros([number_of_dipoles, number_of_dipoles], dtype=object)
-//    Eigen::MatrixXcd grad_matrix_T(3*number_of_dipoles,3*number_of_dipoles);
-    //
-    // Working directly with the transpose as the un-transposed matrix is not needed.
-    //
-    //for i in range(number_of_dipoles):
-    //for j in range(number_of_dipoles):
-    //if i == j:
-    //grad_matrix[i][j] = 0
-    //else:
-    //grad_matrix[i][j] = Dipoles.py_grad_E_cc(displacements_matrix[i][j], p_array[i], k)
-//    Eigen::Matrix3cd Gradiiblock=Eigen::Matrix3cd::Zero();
-    Eigen::Matrix3cd Gradijblock;
-    //double gradEE[18]; // to hold 9 complex values
-    kvec = beam_collection->BEAM_ARRAY[0].k; // (scalar) assuming same for all beams!
-//    for (i=0; i<number_of_dipoles; i++){
-//        ti = 3*i;
-//        pvec[0] = p_array(i,0).real();
-//        pvec[1] = p_array(i,0).imag();
-//        pvec[2] = p_array(i,1).real();
-//        pvec[3] = p_array(i,1).imag();
-//        pvec[4] = p_array(i,2).real();
-//        pvec[5] = p_array(i,2).imag();
-//        for (j=0; j<number_of_dipoles; j++){
-//            tj = 3*j;
-//            if (i==j){ // All zeros here
-//                grad_matrix_T.block<3,3>(ti,ti) = Gradiiblock;
-//            }
-//            else{ // Compute the matrix
-//                rvec[0] = array_of_positions(i,0) - array_of_positions(j,0);
-//                rvec[1] = array_of_positions(i,1) - array_of_positions(j,1);
-//                rvec[2] = array_of_positions(i,2) - array_of_positions(j,2);
-//                grad_E_cc(rvec, pvec, kvec, gradEE);
-//                Eigen::Map<Eigen::Matrix3cd> Gradijblock((std::complex<double>*)(gradEE), 3, 3);
-                // Note Gradijblock is column-major so already transposed, so will need to
-                // modify the force calculation!
-                // Apparently all Eigen matrices are stored column-major by default so may
-                // need a rethink on some of the working.
-                // I'm wondering if we even need to store this huge matrix?
- //               grad_matrix_T.block<3,3>(tj,ti) = Gradijblock.transpose();
- //           }
- //       }
- //   }
-            //grad_matrix_T = np.transpose(grad_matrix)
-            //#print("Array of particles:",array_of_positions)
-            //#print("Displacements of particles:",displacements_matrix)
-            //#print("dipole vectors:",p_array)
-            //#print("Gradient matrix:",grad_matrix)
-            //#print("Gradient matrix T:",grad_matrix_T)
-            
-    //optical_force_matrix = np.zeros([number_of_dipoles, number_of_dipoles], dtype=object)
-    Eigen::MatrixXd optical_force_array=Eigen::MatrixXd::Zero(number_of_dipoles,3);
-    //Eigen::Vector3cd one_polar;
-    //for i in range(number_of_dipoles):
-    //for j in range(number_of_dipoles):
-    //if i == j:
-    //optical_force_matrix[i][j] = np.zeros(3)
-    //else:
-    //optical_force_matrix[i][j] = optical_force(
-    //                                           grad_matrix_T[i][j], p_array[i]  # TRANSPOSE INPUT!!!!
-    //                                           )
-
-    for (i=0; i<number_of_dipoles; i++){
-        Eigen::Vector3cd one_polar, one_row;
-        double xx,yy,zz;
-        double one_row0,one_row1,one_row2;
-        xx = array_of_positions(i,0);
-        yy = array_of_positions(i,1);
-        zz = array_of_positions(i,2);
-        ti = 3*i;
-        one_polar = p_array.row(i);
-        double gradEE[18]; // to hold 9 complex values
-        double rvec[3];
-        double pvec[6];
-        Eigen::Vector3d temp_vec;
-        one_row0 = optical_force_array.row(i)(0);
-        one_row1 = optical_force_array.row(i)(1);
-        one_row2 = optical_force_array.row(i)(2);
-#pragma omp parallel for reduction(+:one_row0,one_row1,one_row2) private(j,gradEE,temp_vec,rvec,pvec)
-        for (j=0; j<number_of_dipoles; j++){
-            tj = 3*j;
-            if (i!=j){ // Compute the matrix
-                pvec[0] = p_array(j,0).real();
-                pvec[1] = p_array(j,0).imag();
-                pvec[2] = p_array(j,1).real();
-                pvec[3] = p_array(j,1).imag();
-                pvec[4] = p_array(j,2).real();
-                pvec[5] = p_array(j,2).imag();
-                rvec[0] = array_of_positions(j,0) - xx;
-                rvec[1] = array_of_positions(j,1) - yy;
-                rvec[2] = array_of_positions(j,2) - zz;
-                grad_E_cc(rvec, pvec, kvec, gradEE);
-                Eigen::Map<Eigen::Matrix3cd> Gradijblock((std::complex<double>*)(gradEE), 3, 3);
-
-                //Gradijblock = grad_matrix_T.block<3,3>(ti,tj);
-                //std::cout<<i<<" "<<j<<" "<<Gradijblock<<endl;
-                temp_vec = 0.5*(Gradijblock.transpose()*one_polar).real();
-                one_row0 += temp_vec(0);
-                one_row1 += temp_vec(1);
-                one_row2 += temp_vec(2);
-                // Need to check the ordering of above - has it computed correctly? - Yes
-            }
-        }
-        optical_force_array.row(i)(0) = one_row0;
-        optical_force_array.row(i)(1) = one_row1;
-        optical_force_array.row(i)(2) = one_row2;
-
-    }
-    
-    //std::cout<<"Optical force array scat:"<<endl;
-    //std::cout<<optical_force_array<<endl;
-    //optical_force_array_scat = np.sum(optical_force_matrix, axis=1)
-
-    //grad_E_inc = np.zeros(number_of_dipoles, dtype=object)
-    //optical_force_array_inc = np.zeros(number_of_dipoles, dtype=object)
-    //for i in range(number_of_dipoles):
-    //gradE = np.zeros((3,3),dtype=np.complex128)
-    //Beams.all_incident_field_gradients(array_of_positions[i], beam_collection, gradE)
-    num_beams = beam_collection->beams;
-
-    //for i in range(nn):
-    //    Beams.compute_field_gradients(x, y, z, the_beams[i], dgradEE)
-    //    for j in range(3):
-    //        for l in range(3):
-    //            gradEE[j][l] += complex(dgradEE[(j*3+l)*2],-dgradEE[(j*3+l)*2+1]) # conjugate
-    double dgradEE[18];
-    Eigen::Matrix3cd dgradEEmat, grad_E_inc;
-    Eigen::Vector3cd one_polar;
-    for (i=0; i<number_of_dipoles; i++){
-        xx = array_of_positions(i,0);
-        yy = array_of_positions(i,1);
-        zz = array_of_positions(i,2);
-        grad_E_inc = Eigen::Matrix3cd::Zero();
-        for (j=0; j<num_beams; j++){
-            compute_field_gradients(xx, yy, zz, &beam_collection->BEAM_ARRAY[j], dgradEE);
-            Eigen::Map<Eigen::Matrix3cd> dgradEEmat((std::complex<double>*)(dgradEE), 3, 3);
-            grad_E_inc += dgradEEmat.conjugate(); // conjugated!
-        }
-        one_polar = p_array.row(i);
-        optical_force_array.row(i) += 0.5*(grad_E_inc*one_polar).real();
-    }
-    
-//    grad_E_inc[i] = gradE
-//#        grad_E_inc[i] = incident_field_gradient(beam, array_of_positions[i])
-//    optical_force_array_inc[i] = optical_force(
-//                                               np.transpose(grad_E_inc[i]), p_array[i]
-//                                               )
-//    optical_force_array_tot = optical_force_array_scat + optical_force_array_inc
- 
-    //
-    // This is section (3): Summing the dipole forces for each particle.
-    //
-    for (i=0; i<number_of_particles; i++){
-        final_optical_forces[i*3] = 0.0;
-        final_optical_forces[i*3+1] = 0.0;
-        final_optical_forces[i*3+2] = 0.0;
-        for (j=0; j<number_of_dipoles_in_primitive; j++){
-            final_optical_forces[i*3] += optical_force_array(i*number_of_dipoles_in_primitive+j,0);
-            final_optical_forces[i*3+1] += optical_force_array(i*number_of_dipoles_in_primitive+j,1);
-            final_optical_forces[i*3+2] += optical_force_array(i*number_of_dipoles_in_primitive+j,2);
-        }
-    }
-    //final_optical_forces = np.zeros(number_of_particles, dtype=object)
-    //for i in range(number_of_particles):
-    //final_optical_forces[i] = np.sum(optical_force_array_tot[i*number_of_dipoles_in_primitive:(i+1)*number_of_dipoles_in_primitive],axis=0)
-//#print(optical_force_array_tot)
-//#print(final_optical_forces)
-//    return final_optical_forces
-
-    return;
- }
-
-//======================================================================================
-void optical_force_torque_array(double *array_of_particles,int number_of_particles, double dipole_radius, double* dipole_primitive, int number_of_dipoles_in_primitive, double* inv_polar, BEAM_COLLECTION* beam_collection, double* final_optical_forces, double* final_optical_torques, double* final_optical_couples, double* dipole_positions){
+void optical_force_torque_array(double *array_of_particles,int number_of_particles, double dipole_radius, double* dipole_primitive, int number_of_dipoles_in_primitive, double* inv_polar, BEAM_COLLECTION* beam_collection, double* final_optical_forces, double* final_optical_torques, double* final_optical_couples, double* dipole_positions, double* inv_polar_2, int* dipole_above_zero, int*  dipole_below_zero){
     //
     // This version returns the optical torques as well as forces, splitting them into the r X F contribution
     // and the p X E contributions.
@@ -642,6 +199,7 @@ void optical_force_torque_array(double *array_of_particles,int number_of_particl
     // A quick line to remap the inverse polars to complex variables.
     //
     Eigen::Map<Eigen::VectorXcd> inverse_polars((std::complex<double>*)(inv_polar), number_of_particles);
+    Eigen::Map<Eigen::VectorXcd> inverse_polars_2((std::complex<double>*)(inv_polar_2), number_of_particles);
     Eigen::VectorXcd inverse_polarsconj(number_of_particles);
     inverse_polarsconj = inverse_polars.conjugate();
     //Eigen::VectorXcd inverse_polars(number_of_particles);
@@ -680,7 +238,7 @@ void optical_force_torque_array(double *array_of_particles,int number_of_particl
     //
     Eigen::MatrixXcd p_array(number_of_dipoles, 3);
 
-    p_array = dipole_moment_array(array_of_positions, number_of_dipoles, dipole_radius, number_of_dipoles_in_primitive, inverse_polars, beam_collection);
+    p_array = dipole_moment_array(array_of_positions, number_of_dipoles, dipole_radius, number_of_dipoles_in_primitive, inverse_polars, beam_collection, inverse_polars_2, dipole_above_zero,  dipole_below_zero);
     //std::cout<<"Dipole moment:"<<p_array(0,0)<<p_array(0,1)<<p_array(0,2)<<std::endl;
     //std::cout<<"Dipole moment:"<<p_array(1,0)<<p_array(1,1)<<p_array(1,2)<<std::endl;
     //
@@ -829,7 +387,7 @@ void optical_force_torque_array(double *array_of_particles,int number_of_particl
 
 
 //======================================================================================
-Eigen::MatrixXcd dipole_moment_array(Eigen::MatrixXd array_of_positions, int number_of_dipoles, double dipole_radius, int number_of_dipoles_in_primitive, Eigen::VectorXcd inverse_polars, BEAM_COLLECTION* beam_collection){
+Eigen::MatrixXcd dipole_moment_array(Eigen::MatrixXd array_of_positions, int number_of_dipoles, double dipole_radius, int number_of_dipoles_in_primitive, Eigen::VectorXcd inverse_polars, BEAM_COLLECTION* beam_collection, Eigen::VectorXcd inverse_polars_2, int* dipole_above_zero, int*  dipole_below_zero){
     //
     // array_of_positions contains all positions of dipoles in NdNp x 3 list.
     // number_of_dipoles is total across all particles.
@@ -899,15 +457,27 @@ Eigen::MatrixXcd dipole_moment_array(Eigen::MatrixXd array_of_positions, int num
     Eigen::Matrix3cd Aiiblock=Eigen::Matrix3cd::Zero();
     Eigen::Matrix3cd Aijblock;
 
+
     for (i=0; i<number_of_dipoles; i++){
+        Eigen::VectorXcd inverse_polars_to_use;
         ii = i/number_of_dipoles_in_primitive; // INTEGER DIVISION NEEDED
         ti = 3*i;
         for (j=0; j<number_of_dipoles; j++){
             tj = 3*j;
             if (i==j){
-                Aiiblock(0,0) = inverse_polars(ii);
-                Aiiblock(1,1) = inverse_polars(ii);
-                Aiiblock(2,2) = inverse_polars(ii);
+                for (int ind = 0; ind < number_of_dipoles/2; ind ++){
+                    if (i == dipole_above_zero[ind]){
+                        inverse_polars_to_use = inverse_polars;
+                        break;
+                    }
+                }
+                if (inverse_polars_to_use.size() == 0)
+                {
+                    inverse_polars_to_use = inverse_polars_2;
+                }
+                Aiiblock(0,0) = inverse_polars_to_use(ii);
+                Aiiblock(1,1) = inverse_polars_to_use(ii);
+                Aiiblock(2,2) = inverse_polars_to_use(ii);
                 A_matrix.block<3,3>(ti,ti) = Aiiblock;
             }
             else if (j>i){ // only calculate a triangle

@@ -1,7 +1,7 @@
 simulation:
   frames: 2000
   include_dynamics: True
-  dynamics_method: OSEEN
+  dynamics_method: NOTHING
   include_springs: False
   include_bending: False
   include_nonbonded: True
@@ -44,8 +44,8 @@ particles:
   particle_list:
     particle_0:
       coords: -5.3348e-10 -3.0569e-11 2.1470e-06
-    particle_1:
-      coords: 1.2150e-07 3.7592e-07 2.0850e-06
+   # particle_1:
+    #  coords: 1.2150e-07 3.7592e-07 2.0850e-06
     #particle_2:
     #  coords: 2.6673e-07 8.2338e-07 1.9050e-06
     #particle_3:

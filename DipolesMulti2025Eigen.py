@@ -88,7 +88,10 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
     # Generate a list of dipoles for one sphere
     #
     dipole_primitive = dipoles.sphere_positions(sphere_radius, dipole_radius)
+    print("dipole primitive shape")
     print(dipole_primitive.shape)
+    print("dipole primitive type")
+    print(type(dipole_primitive))
     
     '''
     Now calculate new dipole rotations and store it
@@ -134,11 +137,15 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
                     dipole_below_zero.append(di_ind)
                     
             
-        test_rot = Rotation.from_rotvec([np.pi/3000, np.pi/6000, np.pi/4000])
+        test_rot = Rotation.from_rotvec([np.pi/3000, 0, 0])
         test_rot.as_matrix()
         rotated_dipoles = test_rot.apply(rotated_dipoles)
-        
-        optical, torques, couples, dipole_positions = dipoles.py_optical_force_torque_array(position_vectors, dipole_radius, dipole_primitive, inverse_polarizability, beam_collection)
+        #print("rotated_dipoles type")
+        #print(type(rotated_dipoles))
+        #print("rotated_dipoles shape")
+        #print(rotated_dipoles.shape)
+        #print(f"BEFORE FRED {dipole_above_zero}")
+        optical, torques, couples, dipole_positions = dipoles.py_optical_force_torque_array(position_vectors, dipole_radius, rotated_dipoles, inverse_polarizability, beam_collection, inverse_polarizability_2, dipole_above_zero, dipole_below_zero)
         
 
         
@@ -157,9 +164,7 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
                 for k in range(3):
                     optcouple[i,j,k] = couples[j][k] + torques[j][k]
 
-        if i%10 == 0:
-            print("Step ",i)
-            print(i,optical[0])
+        
         #    print(i,optical[1])
         #
         # Generate displacements matrix
@@ -321,10 +326,13 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
             new_positions[1,2] = z_com+myradius*np.sin(theta+np.pi)
 
 
+        elif dynamics_method == "ONLY_OPTICS":
+            new_positions = hydro.trans_bd_hi_no_brownian(position_vectors, radius, total_force_array, number_of_particles, timestep, tensor_choice=hi_method, wall_height=wall_position)
+            pass
+
         elif dynamics_method == "NOTHING":
             new_positions = position_vectors
             pass
-        
         '''
         It's not complicated to store the amount of rotation in each timestep
         and rot commutitivititytyty should not matter bc timestep is small
@@ -348,6 +356,10 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         #dipole_positions_all
         vectors_list.append(position_vectors)  # returns list of position vector arrays of all particles
         #print("Positions:",vectors_list)
+        if i%10 == 0:
+            print("Step ",i)
+            print(i,optical[0])
+            print(position_vectors)
     for k in range(number_of_timesteps):
         vectors_array[k] = vectors_list[k]
         temp_array1[k] = np.hstack(vectors_array[k])
@@ -453,6 +465,24 @@ inverse_polarizability = (1.0+0j)/polarizability # added this for the C++ wrappe
 print("Inverse Polarisability:")
 print(inverse_polarizability)
 
+#ref_ind2 = np.array([1.07*(ref_ind)**2])
+ref_ind2 = np.array([1.07*ref_ind**2])
+
+ep2 = ref_ind2
+a0_2 = (4 * 6 * ct.eps0) * (dipole_radius ** 3) * ((ep2 - epm) / (ep2 + 2*epm)) # Corrected formula
+a_2 = a0_2 / (1 - (2 / 3) * 1j * k ** 3 * a0_2/(4*np.pi*ct.eps0))
+polarizability_2 = a_2
+inverse_polarizability_2 = (1.0+0j)/polarizability_2
+#temp = inverse_polarizability_2
+#inverse_polarizability_2 = inverse_polarizability
+#inverse_polarizability = temp
+print("Inverse Polarisability_2:")
+print(inverse_polarizability_2)
+#inverse_polarizability_2 = inverse_polarizability
+print("type ep_1:")
+print(ep1.shape)
+print("type ep_2:")
+print(ep2.shape)
 
 z_offset = wavelength / 4.0 # needed for odd order Bessel beams
 z_offset = 0.0 # for most other situations
@@ -469,7 +499,7 @@ print("Elapsed time: {:8.6f} s".format(finalT-initialT))
 #===========================================================================
 # This code for matplotlib animation
 #===========================================================================
-
+dynamics_method = simulation.dynamics_method
 if display.show_output==True:
 
     fig,ax = display.plot_intensity(beam_collection)
@@ -479,6 +509,9 @@ if display.show_output==True:
     #dipole_ani = display.animate_dipoles(fig,ax,dipole_positions,radius,colors)
     #particle_ani = display.animate_particles(fig,ax,particles,radius,colors)
     #print(particles)
+    ax.set_xlim(-0.25E-6,0.25E-6)
+    ax.set_ylim(-0.25E-6,0.25E-6)
+    parpole_ani.save(f"dipole_radius_{dipole_radius}-dynamics_method_{dynamics_method}.mp4", dpi = 300)
     print("==========================")
     plt.show()
     print("--------------------------")
