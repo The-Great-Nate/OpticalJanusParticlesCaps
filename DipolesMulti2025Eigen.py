@@ -137,9 +137,9 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
                     dipole_below_zero.append(di_ind)
                     
             
-        test_rot = Rotation.from_rotvec([np.pi/3000, 0, 0])
-        test_rot.as_matrix()
-        rotated_dipoles = test_rot.apply(rotated_dipoles)
+        #test_rot = Rotation.from_rotvec([np.pi/3000, 0, 0])
+        #test_rot.as_matrix()
+        #rotated_dipoles = test_rot.apply(rotated_dipoles)
         #print("rotated_dipoles type")
         #print(type(rotated_dipoles))
         #print("rotated_dipoles shape")
@@ -344,22 +344,16 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         Every timestep - apply neccessary rotation to that object
         When forces are calculated, make ref to rhat object.
         '''
-        
-        #new_positions_list = np.hsplit(new_positions, number_of_particles)
-        #new_positions_array = np.zeros((number_of_particles,3), dtype=np.float64)
-
-        #for j in range(len(new_positions_list)):
-        #    new_positions_array[j] = new_positions_list[j]
         position_vectors = new_positions
-        dipole_positions = rotated_dipoles + position_vectors
-        dipole_positions_all[i] = dipole_positions
+        dipole_positions = rotated_dipoles[None, :, :] + position_vectors[:, None, :] # there'll be a shape mismatch. But transform the dipole pos. to lab frame
+        dipole_positions_all[i] = dipole_positions.reshape(-1, 3) # Makes sure there's always 3 rows
         #dipole_positions_all
         vectors_list.append(position_vectors)  # returns list of position vector arrays of all particles
-        #print("Positions:",vectors_list)
+        # print("Positions:",vectors_list)
         if i%10 == 0:
             print("Step ",i)
             print(i,optical[0])
-            print(position_vectors)
+            #print(position_vectors)
     for k in range(number_of_timesteps):
         vectors_array[k] = vectors_list[k]
         temp_array1[k] = np.hstack(vectors_array[k])
@@ -441,10 +435,8 @@ for i in range(n_particles):
     print(i,particle_types[i],ref_ind[i],colors[i],radii[i],density[i],positions[i])
 #===========================================================================
 # Set up particle polarisabilities and other spurious options
-#===========================================================================
-print(ref_ind)
+#===========================================================================`
 ep1 = ref_ind**2
-print(ep1)
 #mass = (4/3)*rho*np.pi*radius**3
 #gravity = np.zeros(3,dtype=np.float64)
 #gravity[1] = -9.81*mass
@@ -461,29 +453,26 @@ a = a0 / (1 - (2 / 3) * 1j * k ** 3 * a0/(4*np.pi*ct.eps0))
 polarizability = a
 print("Polarisability:")
 print(polarizability)
-inverse_polarizability = (1.0+0j)/polarizability # added this for the C++ wrapper (Chaumet's alpha bar)
+inverse_polarizabilitys = (1.0+0j)/polarizability # added this for the C++ wrapper (Chaumet's alpha bar)
 print("Inverse Polarisability:")
+print(inverse_polarizabilitys)
+
+inverse_polarizability = np.ascontiguousarray(inverse_polarizabilitys[:,0])
+inverse_polarizability_2 = np.ascontiguousarray(inverse_polarizabilitys[:,1])
 print(inverse_polarizability)
-
-#ref_ind2 = np.array([1.07*(ref_ind)**2])
-ref_ind2 = np.array([1.07*ref_ind**2])
-
-ep2 = ref_ind2
+print(inverse_polarizability_2)
+'''
+ep2 = ref_ind[1]**2
 a0_2 = (4 * 6 * ct.eps0) * (dipole_radius ** 3) * ((ep2 - epm) / (ep2 + 2*epm)) # Corrected formula
 a_2 = a0_2 / (1 - (2 / 3) * 1j * k ** 3 * a0_2/(4*np.pi*ct.eps0))
 polarizability_2 = a_2
-inverse_polarizability_2 = (1.0+0j)/polarizability_2
-#temp = inverse_polarizability_2
-#inverse_polarizability_2 = inverse_polarizability
-#inverse_polarizability = temp
+print("Polarisability_2:")
+print(polarizability_2)
+inverse_polarizability_2 = np.array([(1.0+0j)/polarizability_2])
 print("Inverse Polarisability_2:")
 print(inverse_polarizability_2)
-#inverse_polarizability_2 = inverse_polarizability
-print("type ep_1:")
-print(ep1.shape)
-print("type ep_2:")
-print(ep2.shape)
-
+print(type(inverse_polarizability_2))
+'''
 z_offset = wavelength / 4.0 # needed for odd order Bessel beams
 z_offset = 0.0 # for most other situations
 
@@ -509,9 +498,9 @@ if display.show_output==True:
     #dipole_ani = display.animate_dipoles(fig,ax,dipole_positions,radius,colors)
     #particle_ani = display.animate_particles(fig,ax,particles,radius,colors)
     #print(particles)
-    ax.set_xlim(-0.25E-6,0.25E-6)
-    ax.set_ylim(-0.25E-6,0.25E-6)
-    parpole_ani.save(f"dipole_radius_{dipole_radius}-dynamics_method_{dynamics_method}.mp4", dpi = 300)
+    # ax.set_xlim(-7E-6,7E-6)
+    # ax.set_ylim(-7E-6,7E-6)
+    parpole_ani.save(f"dipole_radius_{dipole_radius}-dynamics_method_{dynamics_method}.mp4", dpi = 300, fps=60)
     print("==========================")
     plt.show()
     print("--------------------------")

@@ -1,7 +1,7 @@
 simulation:
   frames: 3000
   include_dynamics: True
-  dynamics_method: NOTHING
+  dynamics_method: ONLY_OPTICS
   include_springs: False
   include_bending: False
   include_nonbonded: False
@@ -30,7 +30,7 @@ beams:
     beamtype: BEAMTYPE_GAUSS_CSP # parameter
     E0: 3.000e+06
     w0: 3.44 # fraction of wavelength
-    translation: 0.0 0.0 -50e-6 # translation in meters or None
+    translation: 0.0 0.0 -50e-6  # translation in meters or None
     rotation: 0.0 0.0 # x rotation followed by z rotation in degrees or None
 #  beam_2:
 #    beamtype: BEAMTYPE_GAUSS_CSP # parameter

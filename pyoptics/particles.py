@@ -50,7 +50,31 @@ class ParticleCollection (object):
                 for newparticle in self.particle_list:
                     particle = self.particle_list[newparticle]
                     print("Loading particle",particle)
-                    if particle != None:
+                    if "material1" in particle.keys():
+                        material1 = particle["material1"]
+                        material2 = particle["material2"]
+                        materials = [material1, material2]
+                        self.particle_type.append(materials)
+                        self.particle_radius.append(float(particle.get('radius',self.default_radius)))
+                        self.particle_density.append(float(particle.get('density',self.default_density)))
+                        self.altcolour = bool(particle.get('altcolour',False))
+                        for material in range(len(materials)):
+                            if self.altcolour==False:
+                                self.particle_colour.append(self.get_particle_spec(particlespecs,self.particle_type[i][material],'display_colour'))
+                            else:
+                                self.particle_colour.append(self.get_particle_spec(particlespecs,self.particle_type[i][material],'alt_display_colour'))
+                            self.particle_vtfcolour.append(self.get_particle_spec(particlespecs,self.particle_type[i][material],'vtf_colour_name'))
+                            self.particle_indices.append(self.get_particle_spec(particlespecs,self.particle_type[i][material],'refractive_index'))
+                        self.coords = particle.get('coords',"0.0 0.0 0.0")
+                        self.fields = self.coords.split(" ")
+                        if self.fields[0]=="None":
+                            self.particle_positions.append(np.array((0.0,0.0,0.0),dtype=np.float64))
+                        else:
+                            self.particle_positions.append(np.array((0.0,0.0,0.0),dtype=np.float64))
+                            for j in range(min(len(self.fields),3)):
+                                self.particle_positions[i][j] = float(self.fields[j])
+
+                    elif particle != None:
                         self.particle_type.append(particle.get('material',self.default_material))
                         self.particle_radius.append(float(particle.get('radius',self.default_radius)))
                         self.particle_density.append(float(particle.get('density',self.default_density)))
@@ -95,7 +119,8 @@ class ParticleCollection (object):
         return return_value
 
     def get_refractive_indices(self):
-        return np.asarray(self.particle_indices,dtype=complex)
+        indices = np.asarray(self.particle_indices,dtype=complex)
+        return indices.reshape(-1, 2)
         
     def get_particle_types(self):
         return np.asarray(self.particle_type)

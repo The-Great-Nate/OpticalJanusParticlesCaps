@@ -1,7 +1,7 @@
 simulation:
   frames: 3000
   include_dynamics: True
-  dynamics_method: NOTHING
+  dynamics_method: ONLY_OPTICS
   include_springs: False
   include_bending: False
   include_nonbonded: False

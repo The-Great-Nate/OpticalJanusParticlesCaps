@@ -93,11 +93,11 @@ class DisplayObject (object):
         self.dipoles_trajectories = []
         for i in range(n_particles_dipoles):
             for die in range(self.dipoles_per_particle):
-                colors = ["blue", "magenta"]
+                colors = colors
                 if die in dipole_above_zero:
-                    col = "blue"
+                    col = colors[i]
                 elif die in dipole_below_zero:
-                    col = "magenta"
+                    col = colors[i]
                 marker = ax.plot([], [], marker="s", markersize=marker_size_dipoles,
                                 c=col, alpha=1, animated=True, linestyle="None")[0]
                 self.dipoles_trajectories.append(marker)
