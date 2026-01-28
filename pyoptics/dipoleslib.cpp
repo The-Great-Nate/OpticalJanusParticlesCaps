@@ -457,24 +457,19 @@ Eigen::MatrixXcd dipole_moment_array(Eigen::MatrixXd array_of_positions, int num
     Eigen::Matrix3cd Aiiblock=Eigen::Matrix3cd::Zero();
     Eigen::Matrix3cd Aijblock;
 
+    std::vector<bool> is_above_zero(number_of_dipoles, false);
+
+    for (int ind = 0; ind < number_of_dipoles / 2; ind++) {
+        is_above_zero[dipole_above_zero[ind]] = true;
+    }
 
     for (i=0; i<number_of_dipoles; i++){
-        Eigen::VectorXcd inverse_polars_to_use;
         ii = i/number_of_dipoles_in_primitive; // INTEGER DIVISION NEEDED
         ti = 3*i;
         for (j=0; j<number_of_dipoles; j++){
             tj = 3*j;
             if (i==j){
-                for (int ind = 0; ind < number_of_dipoles/2; ind ++){
-                    if (i == dipole_above_zero[ind]){
-                        inverse_polars_to_use = inverse_polars;
-                        break;
-                    }
-                }
-                if (inverse_polars_to_use.size() == 0)
-                {
-                    inverse_polars_to_use = inverse_polars_2;
-                }
+                const Eigen::vectorXcd& inverse_polars_to_use = is_above_zero[i] ? inverse_polars : inverse_polars_2
                 Aiiblock(0,0) = inverse_polars_to_use(ii);
                 Aiiblock(1,1) = inverse_polars_to_use(ii);
                 Aiiblock(2,2) = inverse_polars_to_use(ii);
