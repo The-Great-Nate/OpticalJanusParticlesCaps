@@ -17,11 +17,11 @@ python DipolesMulti2024Eigen.py testfile
 
 Parallel version:
 
-g++-15 -std=c++14 -O3 -fopenmp -Wall -Wextra -pedantic -c -fPIC beamslib.cpp -o beamslib.o
-g++-15 -O3 -shared -fopenmp beamslib.o -o beamslib.dylib
-g++-15 -std=c++14 -O3 -fopenmp -Wall -Wextra -pedantic -c -fPIC dipoleslib.cpp -o dipoleslib.o
-g++-15 -O3 -shared -fopenmp dipoleslib.o beamslib.o -o dipoleslib.dylib
-python DipolesMulti2025Eigen.py testfile
+g++ -std=c++14 -O3 -fopenmp -Wall -Wextra -pedantic -c -fPIC beamslib.cpp -o beamslib.o
+g++ -O3 -shared -fopenmp beamslib.o -o beamslib.dylib
+g++ -std=c++14 -O3 -fopenmp -Wall -Wextra -pedantic -c -fPIC dipoleslib.cpp -o dipoleslib.o
+g++ -O3 -shared -fopenmp dipoleslib.o beamslib.o -o dipoleslib.dylib
+python DipolesMulti2025Eigen.py janus_prototype
 
 testfile.yml is a configuration file.  Results will be returned in testfile.xlsx etc.
 

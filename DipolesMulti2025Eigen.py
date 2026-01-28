@@ -45,6 +45,7 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
     include_driving = simulation.include_driving
     include_wall = simulation.include_wall
     include_gravity = simulation.include_gravity
+    include_rotation = simulation.include_rotation
     #=========================================================
     topology = options.topology
     pair_connections = topology.get_bond_connections()
@@ -127,14 +128,17 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         #
         #optical,couples = optical_force_array(position_vectors, E0, dipole_radius, dipole_primitive)
         if i == 0:
-            rotated_dipoles = dipole_primitive
-            dipole_above_zero = []
-            dipole_below_zero = []
-            for di_ind, dipole in enumerate(rotated_dipoles):
-                if dipole[0] > 0:
-                    dipole_above_zero.append(di_ind)
-                else:
-                    dipole_below_zero.append(di_ind)
+            for tempparticle in range(number_of_particles):
+                rotated_dipoles = dipole_primitive
+                array_of_rotated_dipoles = np.tile(rotated_dipoles, (number_of_particles, 1, 1))
+                dipole_above_zero = []
+                dipole_below_zero = []
+                #i am prety sure that this should be as is, but may have been best left as enumerate(rotated_dipoles):
+                for di_ind, dipole in enumerate(array_of_rotated_dipoles):
+                    if dipole[0,0] > 0:
+                        dipole_above_zero.append(di_ind)
+                    else:
+                        dipole_below_zero.append(di_ind)
                     
             
         #test_rot = Rotation.from_rotvec([np.pi/3000, 0, 0])
@@ -204,7 +208,13 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         if include_gravity == True:
             gravity = pyf.gravity_force_array(number_of_particles, position_vectors, radius)
             total_force_array += gravity
-        #
+        if include_rotation == True:
+            for particle_iterator in range(number_of_particles):
+                test_rot = Rotation.from_rotvec([0, particle_iterator*np.pi/300, 0])
+                test_rot.as_matrix()
+                array_of_rotated_dipoles[particle_iterator] = test_rot.apply(array_of_rotated_dipoles[particle_iterator])
+
+
         # Brownian dynamics with hydrodynamics (translational) and choice of Oseen, Rotne-Prager, and Rotne-Prager-Blake tensor
         #
         if dynamics_method=='BD_TRANS_HI' or dynamics_method=='OSEEN': # OSEEN Deprecated
@@ -345,8 +355,11 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         When forces are calculated, make ref to rhat object.
         '''
         position_vectors = new_positions
-        dipole_positions = rotated_dipoles[None, :, :] + position_vectors[:, None, :] # there'll be a shape mismatch. But transform the dipole pos. to lab frame
-        dipole_positions_all[i] = dipole_positions.reshape(-1, 3) # Makes sure there's always 3 rows
+        particle_iterator = 0
+        for particle_iterator in range(number_of_particles):
+
+            dipole_positions = array_of_rotated_dipoles[None, :, :] + position_vectors[:, None, :] # there'll be a shape mismatch. But transform the dipole pos. to lab frame
+            dipole_positions_all[i] = dipole_positions.reshape(-1, 3) # Makes sure there's always 3 rows
         #dipole_positions_all
         vectors_list.append(position_vectors)  # returns list of position vector arrays of all particles
         # print("Positions:",vectors_list)
@@ -383,7 +396,6 @@ filename_yaml = filestem+".yml"
 # Read the yaml file into a system parameter dictionary
 #===========================================================================
 options = readyaml.Options(filestem)
-print(options)
 #===========================================================================
 # Read simulation parameters
 #===========================================================================
@@ -395,6 +407,8 @@ timestep = parameters.time_step
 # Read simulation options
 #===========================================================================
 simulation = options.simulation
+print("options:")
+print(vars(simulation))
 frames = options.simulation.frames
 print("Frames:",frames)
 #===========================================================================
@@ -498,8 +512,8 @@ if display.show_output==True:
     #dipole_ani = display.animate_dipoles(fig,ax,dipole_positions,radius,colors)
     #particle_ani = display.animate_particles(fig,ax,particles,radius,colors)
     #print(particles)
-    # ax.set_xlim(-7E-6,7E-6)
-    # ax.set_ylim(-7E-6,7E-6)
+    ax.set_xlim(-2E-6,2E-6)
+    ax.set_ylim(-2E-6,2E-6)
     parpole_ani.save(f"dipole_radius_{dipole_radius}-dynamics_method_{dynamics_method}.mp4", dpi = 300, fps=60)
     print("==========================")
     plt.show()
