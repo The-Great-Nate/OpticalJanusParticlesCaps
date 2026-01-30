@@ -128,18 +128,20 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         #
         #optical,couples = optical_force_array(position_vectors, E0, dipole_radius, dipole_primitive)
         if i == 0:
+            list_of_ref_inds = []
+            rotated_dipoles = dipole_primitive
+            array_of_rotated_dipoles = np.tile(rotated_dipoles, (number_of_particles, 1, 1))
             for tempparticle in range(number_of_particles):
-                rotated_dipoles = dipole_primitive
-                array_of_rotated_dipoles = np.tile(rotated_dipoles, (number_of_particles, 1, 1))
-                dipole_above_zero = []
-                dipole_below_zero = []
-                #i am prety sure that this should be as is, but may have been best left as enumerate(rotated_dipoles):
-                for di_ind, dipole in enumerate(array_of_rotated_dipoles):
-                    if dipole[0,0] > 0:
-                        dipole_above_zero.append(di_ind)
+                templist = []
+                #i am prety sure that this should be as is, but may have been best left as enumerate(rotated_dipoles): 
+                for dipole in rotated_dipoles:
+                    if dipole[0] > 0:
+                        templist.append(ref_ind[tempparticle][0])
                     else:
-                        dipole_below_zero.append(di_ind)
-                    
+                        templist.append(ref_ind[tempparticle][1])
+                temparray = np.array(templist)
+                list_of_ref_inds.append(temparray)
+            array_of_ref_inds = np.array(list_of_ref_inds)
             
         #test_rot = Rotation.from_rotvec([np.pi/3000, 0, 0])
         #test_rot.as_matrix()

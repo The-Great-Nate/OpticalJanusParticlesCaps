@@ -1,5 +1,5 @@
 simulation:
-  frames: 5000
+  frames: 50
   include_dynamics: True
   dynamics_method: NOTHING
   include_springs: False
