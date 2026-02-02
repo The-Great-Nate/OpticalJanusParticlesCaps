@@ -87,7 +87,7 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
     #
     # Generate a list of dipoles for one sphere
     #
-    dipole_primitive = dipoles.sphere_positions(sphere_radius, dipole_radius)
+    dipole_primitive, _ = dipoles.sphere_positions(sphere_radius, dipole_radius)
     print("dipole primitive shape")
     print(dipole_primitive.shape)
     print("dipole primitive type")
@@ -117,6 +117,7 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
     else:
         optcouple = None
 
+    rotated_dipoles = dipole_primitive
     #=========================================================
     # Main simulation loop
     #=========================================================
@@ -127,25 +128,35 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         #
         #optical,couples = optical_force_array(position_vectors, E0, dipole_radius, dipole_primitive)
         if i == 0:
+            list_of_ref_inds = []
             rotated_dipoles = dipole_primitive
+            array_of_rotated_dipoles = np.tile(rotated_dipoles, (number_of_particles, 1, 1))
             dipole_above_zero = []
             dipole_below_zero = []
-            for di_ind, dipole in enumerate(rotated_dipoles):
-                if dipole[0] > 0:
-                    dipole_above_zero.append(di_ind)
-                else:
-                    dipole_below_zero.append(di_ind)
-                    
-            
-        #test_rot = Rotation.from_rotvec([np.pi/3000, 0, 0])
-        #test_rot.as_matrix()
-        #rotated_dipoles = test_rot.apply(rotated_dipoles)
+            count = 0
+            for tempparticle in range(number_of_particles):
+                templist = []
+                for dipole in rotated_dipoles:
+                    if dipole[0] > 0:
+                        templist.append(inverse_polarizabilitys[tempparticle][0])
+                        dipole_above_zero.append(count)
+                    else:
+                        templist.append(inverse_polarizabilitys[tempparticle][1])
+                        dipole_below_zero.append(count)
+                    count += 1
+                temparray = np.array(templist)
+                list_of_ref_inds.append(temparray)
+            array_of_ref_inds = np.array(list_of_ref_inds)
+        # print(array_of_ref_inds)
+        # test_rot = Rotation.from_rotvec([np.pi/3000, 0, 0])
+        # test_rot.as_matrix()
+        # rotated_dipoles = test_rot.apply(rotated_dipoles)
         #print("rotated_dipoles type")
         #print(type(rotated_dipoles))
         #print("rotated_dipoles shape")
         #print(rotated_dipoles.shape)
         #print(f"BEFORE FRED {dipole_above_zero}")
-        optical, torques, couples, dipole_positions = dipoles.py_optical_force_torque_array(position_vectors, dipole_radius, rotated_dipoles, inverse_polarizability, beam_collection, inverse_polarizability_2, dipole_above_zero, dipole_below_zero)
+        optical, torques, couples, dipole_positions = dipoles.py_optical_force_torque_array(position_vectors, dipole_radius, rotated_dipoles, array_of_ref_inds, beam_collection)
         
 
         
@@ -456,11 +467,12 @@ print(polarizability)
 inverse_polarizabilitys = (1.0+0j)/polarizability # added this for the C++ wrapper (Chaumet's alpha bar)
 print("Inverse Polarisability:")
 print(inverse_polarizabilitys)
+inverse_polarizabilitys = np.ascontiguousarray(inverse_polarizabilitys)
 
 inverse_polarizability = np.ascontiguousarray(inverse_polarizabilitys[:,0])
 inverse_polarizability_2 = np.ascontiguousarray(inverse_polarizabilitys[:,1])
-print(inverse_polarizability)
-print(inverse_polarizability_2)
+# print(inverse_polarizability)
+# print(inverse_polarizability_2)
 '''
 ep2 = ref_ind[1]**2
 a0_2 = (4 * 6 * ct.eps0) * (dipole_radius ** 3) * ((ep2 - epm) / (ep2 + 2*epm)) # Corrected formula
@@ -478,12 +490,17 @@ z_offset = 0.0 # for most other situations
 
 #===========================================================================
 # Perform the simulation
-#===========================================================================
+#=============================================
 
 initialT = time.time()
-particles,optpos, optforces,optcouples,dipole_positions,dipole_above_zero,dipole_below_zero = perform_simulation(n_particles, positions, radius, dipole_radius)
+particles,optpos, optforces,optcouples,dipole_positions, dipole_above_zero,dipole_below_zero = perform_simulation(n_particles, positions, radius, dipole_radius)
+_, number_of_dipoles = dipoles.sphere_positions(radius, dipole_radius)
+print(len(particles))
 finalT = time.time()
 print("Elapsed time: {:8.6f} s".format(finalT-initialT))
+file = open("M1-Pro-DDA-MergeAllPolarisabilities.txt", "a")
+file.write(f"{number_of_dipoles}\t{finalT-initialT}\n")
+file.close()
 
 #===========================================================================
 # This code for matplotlib animation
@@ -500,7 +517,7 @@ if display.show_output==True:
     #print(particles)
     # ax.set_xlim(-7E-6,7E-6)
     # ax.set_ylim(-7E-6,7E-6)
-    parpole_ani.save(f"dipole_radius_{dipole_radius}-dynamics_method_{dynamics_method}.mp4", dpi = 300, fps=60)
+    # parpole_ani.save(f"dipole_radius_{dipole_radius}-dynamics_method_{dynamics_method}.mp4", dpi = 300, fps=60)
     print("==========================")
     plt.show()
     print("--------------------------")
