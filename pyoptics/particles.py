@@ -75,17 +75,21 @@ class ParticleCollection (object):
                                 self.particle_positions[i][j] = float(self.fields[j])
 
                     elif particle != None:
-                        self.particle_type.append(particle.get('material',self.default_material))
+                        material1 = particle.get('material',self.default_material)
+                        material2 = material1
+                        materials = [material1, material2]
+                        self.particle_type.append(materials)
                         self.particle_radius.append(float(particle.get('radius',self.default_radius)))
                         self.particle_density.append(float(particle.get('density',self.default_density)))
                         self.altcolour = bool(particle.get('altcolour',False))
-                        if self.altcolour==False:
-                            self.particle_colour.append(self.get_particle_spec(particlespecs,self.particle_type[i],'display_colour'))
-                        else:
-                            self.particle_colour.append(self.get_particle_spec(particlespecs,self.particle_type[i],'alt_display_colour'))
-                        self.particle_vtfcolour.append(self.get_particle_spec(particlespecs,self.particle_type[i],'vtf_colour_name'))
-                        self.particle_indices.append(self.get_particle_spec(particlespecs,self.particle_type[i],'refractive_index'))
-                        self.coords = particle.get('coords',"0.0 0.0 0.0")
+                        for material in range(len(materials)):
+                            if self.altcolour==False:
+                                self.particle_colour.append(self.get_particle_spec(particlespecs,self.particle_type[i][material],'display_colour'))
+                            else:
+                                self.particle_colour.append(self.get_particle_spec(particlespecs,self.particle_type[i][material],'alt_display_colour'))
+                            self.particle_vtfcolour.append(self.get_particle_spec(particlespecs,self.particle_type[i][material],'vtf_colour_name'))
+                            self.particle_indices.append(self.get_particle_spec(particlespecs,self.particle_type[i][material],'refractive_index'))
+                            self.coords = particle.get('coords',"0.0 0.0 0.0")
                         self.fields = self.coords.split(" ")
                         if self.fields[0]=="None":
                             self.particle_positions.append(np.array((0.0,0.0,0.0),dtype=np.float64))

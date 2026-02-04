@@ -1,16 +1,16 @@
 simulation:
-  frames: 500
+  frames: 2000
   include_dynamics: True
   dynamics_method: ONLY_OPTICS
   include_springs: False
   include_bending: False
   include_nonbonded: True
   include_optics: True
-  include_rotation: False
+  include_rotation: True
   optics_method: SH_DDA
 parameters:
   wavelength: 0.785e-6 # meters in vacuum
-  dipole_radius: 55e-9 # meters
+  dipole_radius: 70e-9 # meters
   time_step: 1e-4 # seconds
 output:
   vmd_output: False
@@ -41,25 +41,15 @@ beams:
 #    rotation: 180.0 0.0 # x rotation followed by z rotation in degrees or None
 particles:
   default_radius: 2e-07
-  default_material: Sapphire
+  default_material: FusedSilica
   particle_list:
     particle_0:
-      material1: FusedSilica
-      material2: Diamond
-      coords: -1.0e-6 -1.0e-6 0
-    particle_1:
-      material1: Silicon
-      material2: Sapphire
-      coords: -1.0e-06 1.0e-6 0
-    particle_2:
-      material1: SiN
-      material2: Glass
-      coords: 1.0e-6 1.0e-6 0
-    particle_3:
-      material1: LeadGlass
-      material2: Low
-      coords: 1.0e-6 -1.0e-6 0
-    particle_4:
-      material1: Chromium
-      material2: Titania
-      coords: 0 0 0
+      coords: -5.3348e-10 -3.0569e-11 2.1470e-06
+   # particle_1:
+    #  coords: 1.2150e-07 3.7592e-07 2.0850e-06
+    #particle_2:
+    #  coords: 2.6673e-07 8.2338e-07 1.9050e-06
+    #particle_3:
+    #  coords: 4.0586e-07 1.2520e-06 1.6262e-06
+    #particle_4:
+    #  coords: 5.2049e-07 1.6050e-06 1.2855e-06
