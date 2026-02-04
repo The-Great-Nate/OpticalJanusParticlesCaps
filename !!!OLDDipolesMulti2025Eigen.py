@@ -88,7 +88,11 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
     #
     # Generate a list of dipoles for one sphere
     #
-    dipole_primitive, _ = dipoles.sphere_positions(sphere_radius, dipole_radius)
+    dipole_primitive = dipoles.sphere_positions(sphere_radius, dipole_radius)
+    print("dipole primitive shape")
+    print(dipole_primitive.shape)
+    print("dipole primitive type")
+    print(type(dipole_primitive))
     
     '''
     Now calculate new dipole rotations and store it
@@ -114,7 +118,6 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
     else:
         optcouple = None
 
-    rotated_dipoles = dipole_primitive
     #=========================================================
     # Main simulation loop
     #=========================================================
@@ -128,33 +131,28 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
             list_of_ref_inds = []
             rotated_dipoles = dipole_primitive
             array_of_rotated_dipoles = np.tile(rotated_dipoles, (number_of_particles, 1, 1))
-            dipole_above_zero = []
-            dipole_below_zero = []
-            count = 0
             for tempparticle in range(number_of_particles):
                 templist = []
                 for dipole in rotated_dipoles:
                     if dipole[0] > 0:
-                        templist.append(inverse_polarizabilitys[tempparticle][0])
-                        dipole_above_zero.append(count)
+                        templist.append(ref_ind[tempparticle][0])
                     else:
-                        templist.append(inverse_polarizabilitys[tempparticle][1])
-                        dipole_below_zero.append(count)
-                    count += 1
+                        templist.append(ref_ind[tempparticle][1])
                 temparray = np.array(templist)
                 list_of_ref_inds.append(temparray)
             array_of_ref_inds = np.array(list_of_ref_inds)
-        # print(array_of_ref_inds)
-        # test_rot = Rotation.from_rotvec([np.pi/3000, 0, 0])
-        # test_rot.as_matrix()
-        # rotated_dipoles = test_rot.apply(rotated_dipoles)
+            
+        #test_rot = Rotation.from_rotvec([np.pi/3000, 0, 0])
+        #test_rot.as_matrix()
+        #rotated_dipoles = test_rot.apply(rotated_dipoles)
         #print("rotated_dipoles type")
         #print(type(rotated_dipoles))
         #print("rotated_dipoles shape")
         #print(rotated_dipoles.shape)
         #print(f"BEFORE FRED {dipole_above_zero}")
         optical, torques, couples, dipole_positions = dipoles.py_optical_force_torque_array(position_vectors, dipole_radius, rotated_dipoles, array_of_ref_inds, beam_collection)   
-             
+
+        
         #couples = None
         #include_couple==False
         #if excel_output==True:
@@ -211,19 +209,11 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
             gravity = pyf.gravity_force_array(number_of_particles, position_vectors, radius)
             total_force_array += gravity
         if include_rotation == True:
-            rotational_drag = 1/(8* np.pi * ct.viscosity * radius)
-            total_torques = couples+torques
-            total_torques = total_torques*10000000000000000000
             for particle_iterator in range(number_of_particles):
-                #test_rot = Rotation.from_rotvec([0, particle_iterator*np.pi/300, 0])
-                #test_rot.as_matrix()
-                #array_of_rotated_dipoles[particle_iterator] = test_rot.apply(array_of_rotated_dipoles[particle_iterator])
-                angular_velocity = rotational_drag * total_torques[particle_iterator]
-                rotvec = angular_velocity * timestep
-                rot = Rotation.from_rotvec(rotvec)
-                array_of_rotated_dipoles[particle_iterator] = rot.apply(array_of_rotated_dipoles[particle_iterator])
-
-     #
+                test_rot = Rotation.from_rotvec([0, particle_iterator*np.pi/300, 0])
+                test_rot.as_matrix()
+                array_of_rotated_dipoles[particle_iterator] = test_rot.apply(array_of_rotated_dipoles[particle_iterator])
+                
         # Brownian dynamics with hydrodynamics (translational) and choice of Oseen, Rotne-Prager, and Rotne-Prager-Blake tensor
         #
         if dynamics_method=='BD_TRANS_HI' or dynamics_method=='OSEEN': # OSEEN Deprecated
@@ -365,7 +355,6 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         '''
         position_vectors = new_positions
         particle_iterator = 0
-
         for particle_iterator in range(number_of_particles):
 
             dipole_positions = array_of_rotated_dipoles[None, :, :] + position_vectors[:, None, :] # there'll be a shape mismatch. But transform the dipole pos. to lab frame
@@ -375,7 +364,7 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         # print("Positions:",vectors_list)
         if i%10 == 0:
             print("Step ",i)
-            #print(i,optical[0])
+            print(i,optical[0])
             #print(position_vectors)
     for k in range(number_of_timesteps):
         vectors_array[k] = vectors_list[k]
@@ -406,7 +395,6 @@ filename_yaml = filestem+".yml"
 # Read the yaml file into a system parameter dictionary
 #===========================================================================
 options = readyaml.Options(filestem)
-print(options)
 #===========================================================================
 # Read simulation parameters
 #===========================================================================
@@ -481,12 +469,11 @@ print(polarizability)
 inverse_polarizabilitys = (1.0+0j)/polarizability # added this for the C++ wrapper (Chaumet's alpha bar)
 print("Inverse Polarisability:")
 print(inverse_polarizabilitys)
-inverse_polarizabilitys = np.ascontiguousarray(inverse_polarizabilitys)
 
 inverse_polarizability = np.ascontiguousarray(inverse_polarizabilitys[:,0])
 inverse_polarizability_2 = np.ascontiguousarray(inverse_polarizabilitys[:,1])
-# print(inverse_polarizability)
-# print(inverse_polarizability_2)
+print(inverse_polarizability)
+print(inverse_polarizability_2)
 '''
 ep2 = ref_ind[1]**2
 a0_2 = (4 * 6 * ct.eps0) * (dipole_radius ** 3) * ((ep2 - epm) / (ep2 + 2*epm)) # Corrected formula
@@ -504,17 +491,12 @@ z_offset = 0.0 # for most other situations
 
 #===========================================================================
 # Perform the simulation
-#=============================================
+#===========================================================================
 
 initialT = time.time()
-particles,optpos, optforces,optcouples,dipole_positions, dipole_above_zero,dipole_below_zero = perform_simulation(n_particles, positions, radius, dipole_radius)
-_, number_of_dipoles = dipoles.sphere_positions(radius, dipole_radius)
-print(len(particles))
+particles,optpos, optforces,optcouples,dipole_positions,dipole_above_zero,dipole_below_zero = perform_simulation(n_particles, positions, radius, dipole_radius)
 finalT = time.time()
 print("Elapsed time: {:8.6f} s".format(finalT-initialT))
-file = open("M1-Pro-DDA-MergeAllPolarisabilities.txt", "a")
-file.write(f"{number_of_dipoles}\t{finalT-initialT}\n")
-file.close()
 
 #===========================================================================
 # This code for matplotlib animation
@@ -529,9 +511,9 @@ if display.show_output==True:
     #dipole_ani = display.animate_dipoles(fig,ax,dipole_positions,radius,colors)
     #particle_ani = display.animate_particles(fig,ax,particles,radius,colors)
     #print(particles)
-    ax.set_xlim(-6E-6,6E-6)
-    ax.set_ylim(-6E-6,6E-6)
-    # parpole_ani.save(f"dipole_radius_{dipole_radius}-dynamics_method_{dynamics_method}.mp4", dpi = 300, fps=60)
+    ax.set_xlim(-2E-6,2E-6)
+    ax.set_ylim(-2E-6,2E-6)
+    parpole_ani.save(f"dipole_radius_{dipole_radius}-dynamics_method_{dynamics_method}.mp4", dpi = 300, fps=60)
     print("==========================")
     plt.show()
     print("--------------------------")

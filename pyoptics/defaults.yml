@@ -27,7 +27,7 @@ simulation:
   include_wall: False
   include_nonbonded: True
   include_optics: True
-  include_rotation: False
+  include_rotation: True
   optics_method: SH_DDA
 #============================================================================================
 # Simulation parameters
