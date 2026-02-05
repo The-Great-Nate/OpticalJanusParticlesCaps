@@ -1,5 +1,5 @@
 simulation:
-  frames: 500
+  frames: 1000
   include_dynamics: True
   dynamics_method: ONLY_OPTICS
   include_springs: False
@@ -15,7 +15,7 @@ parameters:
 output:
   vmd_output: False
   excel_output: False
-  hdf_output: True
+  hdf_output: False
   include_force: True
   include_couple: False
 display:
