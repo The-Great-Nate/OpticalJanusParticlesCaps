@@ -224,7 +224,7 @@ def py_optical_force_torque_array(array_of_particles,dipole_radius,dipole_primit
     #print(f"====================\n{array_of_particles}\n====================")
     #print(len(array_of_particles))
     num_particles = len(array_of_particles)
-    num_dipoles = len(dipole_primitive)
+    num_dipoles = dipole_primitive.shape[1]
     num_parpoles = num_particles*num_dipoles
     forces = np.zeros((num_particles,3),dtype=np.float64)
     torques = np.zeros((num_particles,3),dtype=np.float64)
@@ -233,6 +233,12 @@ def py_optical_force_torque_array(array_of_particles,dipole_radius,dipole_primit
     # inv_polar_unwrap = inverse_polarisation.view(dtype=np.float64).reshape((num_particles*2,1)).flatten() # Split real & imaginary bit into two separate entries
     inv_polar_unwrap = inverse_polarisations.flatten(order='C')
     dipole_primitive = np.ascontiguousarray(dipole_primitive)
+    # print("inv_polar_unwrap")
+    # print(inv_polar_unwrap)
+    # print("dipole_primitive")
+    # print(dipole_primitive)
+    # print("dipole_primitive shape")
+    # print(dipole_primitive.shape)
     Dipoles.optical_force_torque_array(array_of_particles, num_particles, dipole_radius, dipole_primitive, num_dipoles, inv_polar_unwrap, beam_collection, forces, torques, couples, dipole_positions)
     #print("=========================")
     #print(f"dipoles after\n{dipole_positions}")
@@ -246,6 +252,7 @@ grad_E_cc.argtypes = [numpy.ctypeslib.ndpointer(dtype=np.float64, ndim=1, shape=
 ND_POINTER_1 = np.ctypeslib.ndpointer(dtype=np.float64,ndim=1,flags="C")
 ND_POINTER_2 = np.ctypeslib.ndpointer(dtype=np.float64,ndim=2,flags="C")
 ND_POINTER_3 = np.ctypeslib.ndpointer(dtype=np.complex128,ndim=1,flags="C")
+ND_POINTER_4 = np.ctypeslib.ndpointer(dtype=np.float64,ndim=3,flags="C")
 
 
 """ optical_force_array = Dipoles.optical_force_array
@@ -259,7 +266,7 @@ optical_force_array_precomp.argtypes = [ND_POINTER_2,ctypes.c_int,ctypes.c_doubl
 #optical_force_array.restype = ctypes.POINTER(ctypes.c_double)
 optical_force_torque_array = Dipoles.optical_force_torque_array
 
-optical_force_torque_array.argtypes = [ND_POINTER_2,ctypes.c_int,ctypes.c_double,ND_POINTER_2,ctypes.c_int, ND_POINTER_3,ctypes.POINTER(beams.BEAM_COLLECTION),ND_POINTER_2,ND_POINTER_2,ND_POINTER_2,ND_POINTER_2]
+optical_force_torque_array.argtypes = [ND_POINTER_2,ctypes.c_int,ctypes.c_double,ND_POINTER_4,ctypes.c_int, ND_POINTER_3,ctypes.POINTER(beams.BEAM_COLLECTION),ND_POINTER_2,ND_POINTER_2,ND_POINTER_2,ND_POINTER_2]
 #
 #
 ###################################################################################

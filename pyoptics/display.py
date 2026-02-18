@@ -18,7 +18,14 @@ class DisplayObject (object):
         self.frame_min = abs(int(self.set_display_value(displayinfo,displaydefaults,'frame_min'))) # starting frame for animation
         self.frame_max = min(frames,int(self.set_display_value(displayinfo,displaydefaults,'frame_max')))
         self.frame_interval = int(self.set_display_value(displayinfo,displaydefaults,'frame_interval'))
+    def rotate_vector_by_quaternion(self, v, q):
+        w = q[0]
+        u = q[1:4]
 
+        uv = np.cross(u, v)
+        uuv = np.cross(u, uv)
+
+        return v + 2 * (w * uv + uuv)
 
     def set_display_value(self,displayinfo,displaydefaults,name):
         if displayinfo==None:
@@ -72,7 +79,7 @@ class DisplayObject (object):
         return fig,ax
 
 
-    def plot_parpoles(self,fig,ax,particle_positions,dipole_positions,radius,colors, dipole_above_zero,dipole_below_zero):
+    def plot_parpoles(self,fig,ax,particle_positions,dipole_positions,radius,colors, dipole_above_zero,dipole_below_zero, allqs):
         n_particles = len(colors)
         marker_size_particles = (1.25*10.0*(radius/200e-9)*(5e-6/self.max_size))
         self.particles_positions = particle_positions
@@ -101,23 +108,58 @@ class DisplayObject (object):
                 marker = ax.plot([], [], marker="s", markersize=marker_size_dipoles,
                                 c=col, alpha=1, animated=True, linestyle="None")[0]
                 self.dipoles_trajectories.append(marker)
+        axis_length = radius * 2
+        axis_colors = ['r', 'g', 'b']
 
+        self.body_axes = []
+
+        for p in range(n_particles):
+            axes_for_particle = []
+            for c in axis_colors:
+                line = ax.plot([], [], lw=1.5, c=c, animated=True)[0]
+                axes_for_particle.append(line)
+            self.body_axes.append(axes_for_particle)
+        
         def init_anim():
             for trajectory in self.particles_trajectories + self.dipoles_trajectories:
                 trajectory.set_data([], [])
             return self.particles_trajectories + self.dipoles_trajectories
 
         def animate(fff):
+            p = 0
             frames = self.frame_min + fff * self.frame_interval
             start = max(frames - 2, 0)
             end = frames
+            real_n_particles = int(n_particles/2) #because n_particles is actually the number of colours now
+            for p in range(real_n_particles):
+                q = allqs[frames, p]  
 
-            # Update particle trajectories
+                
+                ex = np.array([1.,0.,0.])
+                ey = np.array([0.,1.,0.])
+                ez = np.array([0.,0.,1.])
+
+                ex_r = self.rotate_vector_by_quaternion(ex, q)
+                ey_r = self.rotate_vector_by_quaternion(ey, q)
+                ez_r = self.rotate_vector_by_quaternion(ez, q)
+
+                pos = particle_positions[p][:, frames]
+
+                rotated_axes = [ex_r, ey_r, ez_r]
+
+                for i in range(3):
+                    arrow_start = pos
+                    arrow_end = pos + axis_length * rotated_axes[i]
+                    self.body_axes[p][i].set_data(
+                        [arrow_start[0], arrow_end[0]],
+                        [arrow_start[1], arrow_end[1]]
+                    )
+            
             for trajectory, particle in zip(self.particles_trajectories, self.particles_positions):
                 trajectory.set_data(
                     particle[0, frames - 2 : frames], particle[1, frames - 2 : frames]
                 )
-            # Update dipole trajectories
+            
             for i, trajectory in enumerate(self.dipoles_trajectories):
                 particle_idx = i // self.dipoles_per_particle
                 sub_idx = i % self.dipoles_per_particle
@@ -128,7 +170,7 @@ class DisplayObject (object):
                 y = points[:, 1].reshape(-1)
                 trajectory.set_data(x, y)
 
-            return self.particles_trajectories + self.dipoles_trajectories
+            return (self.particles_trajectories + self.dipoles_trajectories + [axis for particle_axes in self.body_axes for axis in particle_axes])
 
         ani = animation.FuncAnimation(fig, animate, init_func=init_anim,
                                     frames=(self.frame_max - self.frame_min)//self.frame_interval,

@@ -17,7 +17,33 @@ from pyoptics import readyaml
 from pyoptics import hydro
 from pyoptics import constants as ct
 from scipy.spatial.transform import Rotation
-
+import numpy as np
+#this function is just being put here til i talk to nate about whether it should get its own file 
+def kabsch_quaternion(dipole_primitive, dipoles_rotated):
+    #started with kabsch giving a rotation matrix then converting to quaternions but this is quicker and just as specific
+    P = dipole_primitive
+    Q = dipoles_rotated
+    print("Q",Q)
+    P = P - P.mean(axis=0)
+    Q = Q - Q.mean(axis=0)
+    H = P.T @ Q
+    delta = np.array([
+        H[1,2] - H[2,1],
+        H[2,0] - H[0,2],
+        H[0,1] - H[1,0]
+    ])
+    G = np.zeros((4,4))
+    G[0,0] = np.trace(H)
+    G[0,1:4] = delta
+    G[1:4,0] = delta
+    G[1:4,1:4] = H + H.T - np.trace(H)*np.eye(3)
+    eigenvalues, eigenvectors = np.linalg.eigh(G)
+    q = eigenvectors[:, np.argmax(eigenvalues)]
+    q /= np.linalg.norm(q)
+    if q[0] < 0:
+        q = -q
+    #this could probably be adapted to only run once at the end of the sim and calculate all the rotations at once from our list of all dipoles across all timesteps, maybe quicker?
+    return q
 def perform_simulation(number_of_particles, positions, sphere_radius, dipole_radius):
 
     position_vectors = positions
@@ -89,7 +115,6 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
     # Generate a list of dipoles for one sphere
     #
     dipole_primitive, _ = dipoles.sphere_positions(sphere_radius, dipole_radius)
-    
     '''
     Now calculate new dipole rotations and store it
     So store dipole_primitive and tipole_primitive t-1 separate for each particle
@@ -125,6 +150,8 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         #
         #optical,couples = optical_force_array(position_vectors, E0, dipole_radius, dipole_primitive)
         if i == 0:
+            
+            allqs = np.zeros((number_of_timesteps, n_particles, 4))
             list_of_ref_inds = []
             rotated_dipoles = dipole_primitive
             array_of_rotated_dipoles = np.tile(rotated_dipoles, (number_of_particles, 1, 1))
@@ -144,7 +171,8 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
                 temparray = np.array(templist)
                 list_of_ref_inds.append(temparray)
             array_of_ref_inds = np.array(list_of_ref_inds)
-        # print(array_of_ref_inds)
+        #print("array_of_ref_inds", array_of_ref_inds)
+        #print("array_of_rotated_dipoles", array_of_rotated_dipoles)
         # test_rot = Rotation.from_rotvec([np.pi/3000, 0, 0])
         # test_rot.as_matrix()
         # rotated_dipoles = test_rot.apply(rotated_dipoles)
@@ -153,7 +181,7 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         #print("rotated_dipoles shape")
         #print(rotated_dipoles.shape)
         #print(f"BEFORE FRED {dipole_above_zero}")
-        optical, torques, couples, dipole_positions = dipoles.py_optical_force_torque_array(position_vectors, dipole_radius, rotated_dipoles, array_of_ref_inds, beam_collection)   
+        optical, torques, couples, dipole_positions = dipoles.py_optical_force_torque_array(position_vectors, dipole_radius, array_of_rotated_dipoles, array_of_ref_inds, beam_collection)   
              
         #couples = None
         #include_couple==False
@@ -199,7 +227,7 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         if include_wall == True:
             wall_force = pyf.wall_force_array(number_of_particles, position_vectors, wall_position, wall_force_max, wall_order, wall_zrange)
             total_force_array += wall_force
-        
+
         if include_bending == True:
             if angle_connections is not None:
                 bending = pyf.bending_force_array(number_of_particles, position_vectors, angle_values, bending_stiffnesses, angle_connections)
@@ -210,10 +238,10 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         if include_gravity == True:
             gravity = pyf.gravity_force_array(number_of_particles, position_vectors, radius)
             total_force_array += gravity
-        if include_rotation == True:
-            rotational_drag = 1/(8* np.pi * ct.viscosity * radius)
+        if include_rotation == True and dynamics_method != 'COUPLED_ROTATION':
+            rotational_drag = 1/(8* np.pi * ct.viscosity * radius**3)
             total_torques = couples+torques
-            total_torques = total_torques*10000000000000000000
+            #total_torques = total_torques*10000000000000000000
             for particle_iterator in range(number_of_particles):
                 #test_rot = Rotation.from_rotvec([0, particle_iterator*np.pi/300, 0])
                 #test_rot.as_matrix()
@@ -222,7 +250,8 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
                 rotvec = angular_velocity * timestep
                 rot = Rotation.from_rotvec(rotvec)
                 array_of_rotated_dipoles[particle_iterator] = rot.apply(array_of_rotated_dipoles[particle_iterator])
-
+                q = kabsch_quaternion(dipole_primitive, array_of_rotated_dipoles[particle_iterator])
+                allqs[i,particle_iterator] = q
      #
         # Brownian dynamics with hydrodynamics (translational) and choice of Oseen, Rotne-Prager, and Rotne-Prager-Blake tensor
         #
@@ -232,6 +261,31 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         #
         # Brownian dynamics with constraints (SHAKE_HI) hydrodynamics (translational) and choice of Oseen, Rotne-Prager, and Rotne-Prager-Blake tensor.  The Blake tensor also requires a wall to be specified on the z-axis.
         #
+        elif dynamics_method=='COUPLED_ROTATION':
+            total_torques = couples + torques   
+            total_torques = [[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
+            print("total_torques", total_torques)
+            total_force_array = [[5e-12,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
+            print("total_force_array", total_force_array)   
+            brownian = False
+            
+
+            new_positions, array_of_rotated_dipoles = hydro.coupled_bd_stepper(
+                position_vectors,
+                array_of_rotated_dipoles,
+                total_force_array,
+                total_torques,
+                radius,
+                timestep,
+                tensor_choice=hi_method,
+                brownian=False)
+
+            position_vectors = new_positions
+
+
+            for particle_iterator in range(number_of_particles):
+                q = kabsch_quaternion(dipole_primitive, array_of_rotated_dipoles[particle_iterator])
+                allqs[i,particle_iterator] = q    
         elif dynamics_method=='BD_TRANS_SHAKE_HI' or dynamics_method=='SHAKE_HI': # SHAKE_HI Deprecated
             new_positions, final_separation_list = hydro.trans_bd_shake_hi(position_vectors, radius, total_force_array, number_of_particles, timestep, separation_list, constrained_separation, pair_constraints, tensor_choice=hi_method, wall_height=wall_position)
 
@@ -386,7 +440,10 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
     if dynamics_method=='BD_TRANS_SHAKE_HI' or dynamics_method=='SHAKE_HI':
         print("Mean separation: ",np.mean(final_separation_list))
         #print(separation_list)
-    return xyz_list1,optpos,optforce,optcouple,dipole_positions_all,dipole_above_zero,dipole_below_zero
+
+    if i == number_of_timesteps-1:
+        print("allqs", allqs) 
+    return xyz_list1,optpos,optforce,optcouple,dipole_positions_all,dipole_above_zero,dipole_below_zero, allqs
 
 
 
@@ -507,7 +564,7 @@ z_offset = 0.0 # for most other situations
 #=============================================
 
 initialT = time.time()
-particles,optpos, optforces,optcouples,dipole_positions, dipole_above_zero,dipole_below_zero = perform_simulation(n_particles, positions, radius, dipole_radius)
+particles,optpos, optforces,optcouples,dipole_positions, dipole_above_zero,dipole_below_zero, allqs = perform_simulation(n_particles, positions, radius, dipole_radius)
 _, number_of_dipoles = dipoles.sphere_positions(radius, dipole_radius)
 print(len(particles))
 finalT = time.time()
@@ -524,7 +581,7 @@ if display.show_output==True:
 
     fig,ax = display.plot_intensity(beam_collection)
 
-    parpole_ani = display.plot_parpoles(fig,ax,particles,dipole_positions,radius,colors,dipole_above_zero,dipole_below_zero)
+    parpole_ani = display.plot_parpoles(fig,ax,particles,dipole_positions,radius,colors,dipole_above_zero,dipole_below_zero, allqs)
     #particle_ani = display.animate_particles(fig,ax,particles,radius,colors)
     #dipole_ani = display.animate_dipoles(fig,ax,dipole_positions,radius,colors)
     #particle_ani = display.animate_particles(fig,ax,particles,radius,colors)
