@@ -10,3 +10,6 @@ Original-Program-DO-NOT-TOUCH/
 *.dylib
 *.yml
 *.txt
+*.pyc
+.venv/
+.vscode/

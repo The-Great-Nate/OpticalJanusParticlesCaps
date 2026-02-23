@@ -1,5 +1,5 @@
 simulation:
-  frames: 200
+  frames: 10000
   include_dynamics: True
   dynamics_method: OSEEN
   include_springs: False
@@ -9,7 +9,7 @@ simulation:
   optics_method: SH_DDA
 parameters:
   wavelength: 0.785e-6 # meters in vacuum
-  dipole_radius: 80e-9 # meters
+  dipole_radius: 100e-9 # meters
   time_step: 1e-4 # seconds
 output:
   vmd_output: False
@@ -23,7 +23,7 @@ display:
   max_size: 20e-6 # range will be 2 times this
   resolution: 201 # number of points in each direction of plot
   frame_min: 0 # starting frame for animation
-  frame_max: 5000 # will default to number of frames
+  frame_max: 10000 # will default to number of frames
   z_offset: 0.0e-6
 beams:
   beam_1:

@@ -182,7 +182,7 @@ void grad_E_cc(double *rvec, double *pvec, double kvec, double *gradEE)
 //======================================================================================
 
 //======================================================================================
-void optical_force_torque_array(double *array_of_particles,int number_of_particles, double dipole_radius, double* dipole_primitive, int number_of_dipoles_in_primitive, double* inv_polar, BEAM_COLLECTION* beam_collection, double* final_optical_forces, double* final_optical_torques, double* final_optical_couples, double* dipole_positions){
+void optical_force_torque_array(double *array_of_particles,int number_of_particles, double dipole_radius, double* dipole_primitive, int number_of_dipoles_in_primitive, std::complex<double>* inv_polar, BEAM_COLLECTION* beam_collection, double* final_optical_forces, double* final_optical_torques, double* final_optical_couples, double* dipole_positions){
     //
     // This version returns the optical torques as well as forces, splitting them into the r X F contribution
     // and the p X E contributions.
@@ -199,7 +199,7 @@ void optical_force_torque_array(double *array_of_particles,int number_of_particl
     // A quick line to remap the inverse polars to complex variables.
     //
     int number_of_dipoles = number_of_particles*number_of_dipoles_in_primitive;
-    Eigen::Map<Eigen::VectorXcd> inverse_polars((std::complex<double>*)(inv_polar), number_of_dipoles);
+    Eigen::Map<Eigen::VectorXcd> inverse_polars(inv_polar, number_of_dipoles);
     Eigen::VectorXcd inverse_polarsconj(number_of_dipoles);
     inverse_polarsconj = inverse_polars.conjugate();
     //Eigen::VectorXcd inverse_polars(number_of_particles);
@@ -221,20 +221,11 @@ void optical_force_torque_array(double *array_of_particles,int number_of_particl
     for (i=0; i<number_of_particles; i++){
         for (j=0; j<number_of_dipoles_in_primitive; j++){
             for (ij=0; ij<3; ij++){
-                array_of_positions(i*number_of_dipoles_in_primitive+j,ij) = array_of_particles[i*3+ij] + dipole_primitive[j*3+ij];
-                dipole_positions[(i*number_of_dipoles_in_primitive+j)*3+ij] = array_of_positions(i*number_of_dipoles_in_primitive+j,ij);
+                array_of_positions(i*number_of_dipoles_in_primitive+j,ij) = array_of_particles[i*3+ij] + dipole_primitive[(i*number_of_dipoles_in_primitive+j)* 3 + ij]; // Changed index of dipole primitivesss
+                // dipole_positions[(i*number_of_dipoles_in_primitive+j)*3+ij] = array_of_positions(i*number_of_dipoles_in_primitive+j,ij);
             }
         }
     }
-
-    for (i=0; i<number_of_particles; i++){
-        for (j=0; j<number_of_dipoles_in_primitive; j++){
-            for (ij=0; ij<3; ij++){
-                dipole_positions[(i*number_of_dipoles_in_primitive+j)*3+ij] = array_of_positions(i*number_of_dipoles_in_primitive+j,ij);
-            } 
-        }
-    }
-    //
     // Here is section (2):
     //
     Eigen::MatrixXcd p_array(number_of_dipoles, 3);
@@ -316,8 +307,6 @@ void optical_force_torque_array(double *array_of_particles,int number_of_particl
         one_polar = p_array.row(i);
         optical_force_array.row(i) += 0.5*(grad_E_inc*one_polar).real();
     }
-    
- 
     //
     // This is section (3): Summing the dipole forces for each particle.
     //
@@ -340,14 +329,15 @@ void optical_force_torque_array(double *array_of_particles,int number_of_particl
     //        couples[i,1]+=dipole_primitive[j][2]*optical_force_array_tot[i*number_of_dipoles_in_primitive+j][0]-dipole_primitive[j][0]*optical_force_array_tot[i*number_of_dipoles_in_primitive+j][2]
     //        couples[i,2]+=dipole_primitive[j][0]*optical_force_array_tot[i*number_of_dipoles_in_primitive+j][1]-dipole_primitive[j][1]*optical_force_array_tot[i*number_of_dipoles_in_primitive+j][0]
     //"""
+
     for (i=0; i<number_of_particles; i++){
         final_optical_torques[i*3] = 0.0;
         final_optical_torques[i*3+1] = 0.0;
         final_optical_torques[i*3+2] = 0.0;
         for (j=0; j<number_of_dipoles_in_primitive; j++){
-            final_optical_torques[i*3] += dipole_primitive[j*3+1] * optical_force_array(i*number_of_dipoles_in_primitive+j,2) - dipole_primitive[j*3+2] * optical_force_array(i*number_of_dipoles_in_primitive+j,1);
-            final_optical_torques[i*3+1] += dipole_primitive[j*3+2] * optical_force_array(i*number_of_dipoles_in_primitive+j,0) - dipole_primitive[j*3+0] * optical_force_array(i*number_of_dipoles_in_primitive+j,2);
-            final_optical_torques[i*3+2] += dipole_primitive[j*3+0] * optical_force_array(i*number_of_dipoles_in_primitive+j,1) - dipole_primitive[j*3+1] * optical_force_array(i*number_of_dipoles_in_primitive+j,0);
+            final_optical_torques[i*3] += dipole_primitive[(i * number_of_dipoles_in_primitive + j) * 3+1] * optical_force_array(i*number_of_dipoles_in_primitive+j,2) - dipole_primitive[(i * number_of_dipoles_in_primitive + j) * 3+2] * optical_force_array(i*number_of_dipoles_in_primitive+j,1);
+            final_optical_torques[i*3+1] += dipole_primitive[(i * number_of_dipoles_in_primitive + j) * 3+2] * optical_force_array(i*number_of_dipoles_in_primitive+j,0) - dipole_primitive[(i * number_of_dipoles_in_primitive + j) * 3+0] * optical_force_array(i*number_of_dipoles_in_primitive+j,2);
+            final_optical_torques[i*3+2] += dipole_primitive[(i * number_of_dipoles_in_primitive + j) * 3+0] * optical_force_array(i*number_of_dipoles_in_primitive+j,1) - dipole_primitive[(i * number_of_dipoles_in_primitive + j) * 3+1] * optical_force_array(i*number_of_dipoles_in_primitive+j,0);
         }
     }
 
@@ -377,12 +367,11 @@ void optical_force_torque_array(double *array_of_particles,int number_of_particl
         final_optical_couples[i*3+2] = 0.0;
         for (j=0; j<number_of_dipoles_in_primitive; j++){
             ij = i*number_of_dipoles_in_primitive+j;
-            final_optical_couples[i*3+0] += 0.5*((p_array(ij,1) * p_arrayconj(ij,2) - p_array(ij,2) * p_arrayconj(ij,1)) * inverse_polarsconj(ij)).real();
+            final_optical_couples[i*3+0] += 0.5*((p_array(ij,1) * p_arrayconj(ij,2) - p_array(ij,2) * p_arrayconj(ij,1)) * inverse_polarsconj(ij)).real(); // this sued to be just j or i i think
             final_optical_couples[i*3+1] += 0.5*((p_array(ij,2) * p_arrayconj(ij,0) - p_array(ij,0) * p_arrayconj(ij,2)) * inverse_polarsconj(ij)).real();
             final_optical_couples[i*3+2] += 0.5*((p_array(ij,0) * p_arrayconj(ij,1) - p_array(ij,1) * p_arrayconj(ij,0)) * inverse_polarsconj(ij)).real();
         }
-    }
-    
+    } 
     return;
  }
 
@@ -458,7 +447,7 @@ Eigen::MatrixXcd dipole_moment_array(Eigen::MatrixXd array_of_positions, int num
     Eigen::Matrix3cd Aiiblock=Eigen::Matrix3cd::Zero();
     Eigen::Matrix3cd Aijblock;
 
-
+    // std::cout << "==============" << std::endl;
     for (i=0; i<number_of_dipoles; i++){
         // ii = i/number_of_dipoles_in_primitive; // INTEGER DIVISION NEEDED. SIKE AHAHAHAHAHAHA
         ti = 3*i;
