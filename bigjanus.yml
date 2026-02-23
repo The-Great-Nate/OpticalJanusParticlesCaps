@@ -1,5 +1,5 @@
 simulation:
-  frames: 100
+  frames: 24000
   include_dynamics: True
   dynamics_method: OSEEN
   include_springs: False
@@ -9,8 +9,8 @@ simulation:
   optics_method: SH_DDA
 parameters:
   wavelength: 0.785e-6 # meters in vacuum
-  dipole_radius: 5.8e-8 # meters
-  time_step: 1e-4 # seconds
+  dipole_radius: 125e-9 # meters
+  time_step: 1e-5 # seconds
 output:
   vmd_output: False
   excel_output: False
@@ -19,19 +19,32 @@ output:
   include_couple: False
 display:
   show_output: True
-  frame_interval: 10
+  frame_interval: 10 
   max_size: 20e-6 # range will be 2 times this
   resolution: 201 # number of points in each direction of plot
   frame_min: 0 # starting frame for animation
-  frame_max: 5000 # will default to number of frames
+  frame_max: 24000 # will default to number of frames
   z_offset: 0.0e-6
 beams:
   beam_1:
-    beamtype: BEAMTYPE_GAUSS_CSP # parameter
-    E0: 3.000e+06
-    w0: 3.44 # fraction of wavelength
-    translation: 0.0 0.0 -50e-6 # translation in meters or None
+    beamtype: BEAMTYPE_PLANE # parameter
+    E0: 0.500e+06
+    translation: 0.0 0.0 0.0 # translation in meters or None
     rotation: 0.0 0.0 # x rotation followed by z rotation in degrees or None
+    jones: POLARISATION_LCP
+  beam_2:
+   beamtype: BEAMTYPE_PLANE # parameter
+   E0: 0.500e+06
+   translation: 0.0 0.0 0.0 # translation in meters or None
+   rotation: 180.0 0.0 # x rotation followed by z rotation in degrees or None
+   jones: POLARISATION_RCP
+# beams:
+#   beam_1:
+#     beamtype: BEAMTYPE_GAUSS_CSP # parameter
+#     E0: 3.000e+06
+#     w0: 3.44 # fraction of wavelength
+#     translation: 0.0 0.0 0.0 # translation in meters or None
+#     rotation: 0.0 0.0 # x rotation followed by z rotation in degrees or None
 #  beam_2:
 #    beamtype: BEAMTYPE_GAUSS_CSP # parameter
 #    E0: 4.000e+06
@@ -39,134 +52,134 @@ beams:
 #    translation: 0.0 0.0 -5e-5 # translation in meters or None
 #    rotation: 180.0 0.0 # x rotation followed by z rotation in degrees or None
 particles:
-  default_radius: 2e-07
+  default_radius: 450e-09
   default_material: FusedSilica
   particle_list:
     particle_0:
       material1: FusedSilica
       material2: Diamond
-      coords: -5.3348e-10 -3.0569e-11 2.1470e-06
+      coords: 9.00e-07 0.00e+00 9.00e-07
     particle_1:
       material1: FusedSilica
       material2: Diamond
-      coords: 1.2150e-07 3.7592e-07 2.0850e-06
+      coords: 6.36e-07 6.36e-07 9.00e-07
     particle_2:
       material1: FusedSilica
       material2: Diamond
-      coords: 2.6673e-07 8.2338e-07 1.9050e-06
+      coords: 0.00e+00 9.00e-07 9.00e-07
     particle_3:
       material1: FusedSilica
       material2: Diamond
-      coords: 4.0586e-07 1.2520e-08 1.6262e-06
+      coords: -6.36e-07 6.36e-07 9.00e-07
     particle_4:
       material1: FusedSilica
       material2: Diamond
-      coords: 5.2049e-07 1.6050e-07 1.2855e-06
+      coords: -9.00e-07 0.00e+00 9.00e-07
     particle_5:
       material1: FusedSilica
       material2: Diamond
-      coords: 5.9224e-07 1.8257e-06 9.5940e-07
+      coords: -6.36e-07 -6.36e-07 9.00e-07
     particle_6:
       material1: FusedSilica
       material2: Diamond
-      coords: 3.9476e-07 -3.0569e-11 2.0851e-06
+      coords: 0.00e+00 -9.00e-07 9.00e-07
     particle_7:
       material1: FusedSilica
       material2: Diamond
-      coords: 5.9634e-07 4.3374e-07 1.9637e-06
+      coords: 6.36e-07 -6.36e-07 9.00e-07
     particle_8:
       material1: FusedSilica
       material2: Diamond
-      coords: 7.5813e-07 8.7853e-07 1.7316e-06
+      coords: 9.50e-07 3.94e-07 0.0e+00
     particle_9:
       material1: FusedSilica
       material2: Diamond
-      coords: 8.7174e-07 1.2821e-06 1.4119e-06
+      coords: 3.94e-07 9.50e-07 0.0e+00
     particle_10:
-      material1: Chromium
-      material2: Silicon
-      coords: 1.0e-07 1.0e-07 -2.0e-05  # Scaled down XY, moved Z
+      material1: FusedSilica
+      material2: Diamond
+      coords: -3.94e-07 9.50e-07 0.0e+00
     particle_11:
-      material1: Chromium
-      material2: Silicon
-      coords: 1.0e-07 -2.0e-08 -1.5e-05  # Scaled down XY, moved Z
+      material1: FusedSilica
+      material2: Diamond
+      coords: -9.50e-07 3.94e-07 0.0e+00
     particle_12:
-      material1: Chromium
-      material2: Silicon
-      coords: 1.5e-07 5.0e-08 -1.8e-05  # Scaled down XY, moved Z
+      material1: FusedSilica
+      material2: Diamond
+      coords: -9.50e-07 -3.94e-07 0.0e+00
     particle_13:
-      material1: Chromium
-      material2: Silicon
-      coords: 2.0e-07 1.0e-07 -2.2e-05  # Scaled down XY, moved Z
+      material1: FusedSilica
+      material2: Diamond
+      coords: -3.94e-07 -9.50e-07 0.0e+00
     particle_14:
-      material1: Chromium
-      material2: Silicon
-      coords: 2.5e-07 1.5e-07 -2.5e-05  # Scaled down XY, moved Z
+      material1: FusedSilica
+      material2: Diamond
+      coords: 3.94e-07 -9.50e-07 0.0e+00
     particle_15:
-      material1: Chromium
-      material2: Silicon
-      coords: 2.5e-07 -2.0e-08 -2.8e-05  # Scaled down XY, moved Z
+      material1: FusedSilica
+      material2: Diamond
+      coords: 9.50e-07 -3.94e-07 0.0e+00
     particle_16:
       material1: Chromium
       material2: Silicon
-      coords: 3.0e-07 5.0e-08 -3.0e-05  # Scaled down XY, moved Z
+      coords: 8.50e-07 0.00e+00 -9.00e-07
     particle_17:
       material1: Chromium
       material2: Silicon
-      coords: 3.0e-07 1.0e-07 -3.2e-05  # Scaled down XY, moved Z
+      coords: 6.01e-07 6.01e-07 -9.00e-07
     particle_18:
       material1: Chromium
       material2: Silicon
-      coords: 3.5e-07 -2.0e-08 -3.5e-05  # Scaled down XY, moved Z
+      coords: 0.00e+00 8.50e-07 -9.00e-07
     particle_19:
       material1: Chromium
       material2: Silicon
-      coords: 4.0e-07 5.0e-08 -3.8e-05  # Scaled down XY, moved Z
+      coords: -6.01e-07 6.01e-07 -9.00e-07
     particle_20:
       material1: Chromium
       material2: Silicon
-      coords: 4.5e-07 -2.0e-08 -4.0e-05  # Scaled down XY, moved Z
+      coords: -8.50e-07 0.00e+00 -9.00e-07
     particle_21:
-      material1: HighTitania
-      material2: LeadGlass
-      coords: -3.2040e-07 2.3232e-07 2.0851e-06
+      material1: Chromium
+      material2: Silicon
+      coords: -6.01e-07 -6.01e-07 -9.00e-07
     particle_22:
-      material1: HighTitania
-      material2: LeadGlass
-      coords: -7.0108e-07 5.0886e-07 1.9053e-06
+      material1: Chromium
+      material2: Silicon
+      coords: 0.00e+00 -8.50e-07 -9.00e-07
     particle_23:
-      material1: HighTitania
-      material2: LeadGlass
-      coords: -1.0657e-06 7.7374e-07 1.6267e-06
+      material1: Chromium
+      material2: Silicon
+      coords: 6.01e-07 -6.01e-07 -9.00e-07
     particle_24:
       material1: HighTitania
       material2: LeadGlass
-      coords: -1.3659e-06 9.9189e-07 1.2861e-06
+      coords: 6.50e-07 2.69e-07 4.50e-07
     particle_25:
       material1: HighTitania
       material2: LeadGlass
-      coords: -1.5536e-06 1.1283e-06 9.6010e-07
+      coords: 2.69e-07 6.50e-07 4.50e-07
     particle_26:
       material1: HighTitania
       material2: LeadGlass
-      coords: -2.2879e-07 7.0183e-07 1.9637e-06
+      coords: -2.69e-07 6.50e-07 4.50e-07
     particle_27:
       material1: HighTitania
       material2: LeadGlass
-      coords: -6.0181e-07 9.9328e-07 1.7318e-06
+      coords: -6.50e-07 2.69e-07 4.50e-07
     particle_28:
       material1: HighTitania
       material2: LeadGlass
-      coords: -9.5042e-07 1.0261e-06 1.4122e-06
+      coords: -6.50e-07 -2.69e-07 4.50e-07
     particle_29:
       material1: HighTitania
       material2: LeadGlass
-      coords: -1.2438e-06 1.3678e-06 1.0416e-06
+      coords: -2.69e-07 -6.50e-07 4.50e-07
     particle_30:
       material1: HighTitania
       material2: LeadGlass
-      coords: -9.8492e-08 1.1568e-06 1.7316e-06
+      coords: 2.69e-07 -6.50e-07 4.50e-07
     particle_31:
       material1: HighTitania
       material2: LeadGlass
-      coords: -4.6277e-07 1.4215e-06 1.4532e-06
+      coords: 6.50e-07 -2.69e-07 4.50e-07

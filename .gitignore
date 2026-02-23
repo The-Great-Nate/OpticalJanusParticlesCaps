@@ -4,3 +4,16 @@
 *.mp4
 *.png
 Original-Program-DO-NOT-TOUCH/
+*Identifier
+*.o
+*.so
+*.dylib
+*.yml
+*.txt
+*.pyc
+*,txt
+*.dylib
+*.so
+*.o
+.venv/
+.vscode/

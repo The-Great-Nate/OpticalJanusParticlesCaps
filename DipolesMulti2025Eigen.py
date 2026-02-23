@@ -171,8 +171,9 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
                 temparray = np.array(templist)
                 list_of_ref_inds.append(temparray)
             array_of_ref_inds = np.array(list_of_ref_inds)
-        #print("array_of_ref_inds", array_of_ref_inds)
-        #print("array_of_rotated_dipoles", array_of_rotated_dipoles)
+        # print(f"rot_dipoles\n{array_of_rotated_dipoles}")
+        # print(f"rot_dipoles-shape\n{array_of_rotated_dipoles.shape}")
+        # print(array_of_ref_inds)
         # test_rot = Rotation.from_rotvec([np.pi/3000, 0, 0])
         # test_rot.as_matrix()
         # rotated_dipoles = test_rot.apply(rotated_dipoles)
@@ -427,9 +428,10 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         #dipole_positions_all
         vectors_list.append(position_vectors)  # returns list of position vector arrays of all particles
         # print("Positions:",vectors_list)
-        if i%10 == 0:
+        if i%50 == 0:
             print("Step ",i)
-            #print(i,optical[0])
+            print(i,optical)
+            print(i,total_torques[0])
             #print(position_vectors)
     for k in range(number_of_timesteps):
         vectors_array[k] = vectors_list[k]
@@ -441,9 +443,9 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         print("Mean separation: ",np.mean(final_separation_list))
         #print(separation_list)
 
-    if i == number_of_timesteps-1:
-        print("allqs", allqs) 
-    return xyz_list1,optpos,optforce,optcouple,dipole_positions_all,dipole_above_zero,dipole_below_zero, allqs
+    # if i == number_of_timesteps-1:
+    #     print("allqs", allqs) 
+    return xyz_list1,optpos,optforce,optcouple,dipole_positions_all,dipole_above_zero,dipole_below_zero
 
 
 
@@ -569,9 +571,6 @@ _, number_of_dipoles = dipoles.sphere_positions(radius, dipole_radius)
 print(len(particles))
 finalT = time.time()
 print("Elapsed time: {:8.6f} s".format(finalT-initialT))
-file = open("M1-Pro-DDA-MergeAllPolarisabilities.txt", "a")
-file.write(f"{number_of_dipoles}\t{finalT-initialT}\n")
-file.close()
 
 #===========================================================================
 # This code for matplotlib animation
@@ -588,9 +587,9 @@ if display.show_output==True:
     #print(particles)
     ax.set_xlim(-6E-6,6E-6)
     ax.set_ylim(-6E-6,6E-6)
-    # parpole_ani.save(f"dipole_radius_{dipole_radius}-dynamics_method_{dynamics_method}.mp4", dpi = 300, fps=60)
+    parpole_ani.save(f"{filestem}.mp4", dpi = 300, fps=60)
     print("==========================")
-    plt.show()
+    # plt.show()
     print("--------------------------")
     #print(dipole_positions)
 #===========================================================================
