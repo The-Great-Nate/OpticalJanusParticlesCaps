@@ -4,6 +4,7 @@
 
 import numpy as np
 import itertools as it
+from scipy.spatial.transform import Rotation
 from pyoptics import constants as ct
 
 
@@ -265,6 +266,146 @@ def diffusion_matrix_OLD(array_of_positions, particle_radius):
     D = np.hstack(temporary_array)
     return D,D_matrix
 
+def grand_diffusion_matrix(array_of_positions,
+                           particle_radius,
+                           tensor_choice='RP',
+                           wall_height=0.0):
+    if tensor_choice.upper() == 'BLAKE':
+        raise ValueError("Coupled BD not compatable with walls.")
+    number_of_particles = len(array_of_positions)
+    N = number_of_particles
+    kT = ct.k_B * ct.temperature
+    eta = ct.viscosity
+    a = particle_radius
+    #TT same as non-grnad
+    D_TT_flat, D_TT_blocks = diffusion_matrix(
+        array_of_positions,
+        particle_radius,
+        tensor_choice=tensor_choice,
+        wall_height=wall_height
+    )
+
+    D6 = np.zeros((6*N, 6*N), dtype=float)
+    D6[0:3*N, 0:3*N] = D_TT_flat
+
+    for i in range(N):
+
+        D_RR_self = (kT / (8.0 * np.pi * eta * a**3)) * np.eye(3)
+
+        row_rot_i = 3*N + 3*i
+        D6[row_rot_i:row_rot_i+3,
+           row_rot_i:row_rot_i+3] = D_RR_self
+
+        for j in range(i+1, N):
+
+            rvec = array_of_positions[j] - array_of_positions[i]
+            r = np.linalg.norm(rvec)
+
+            #we were getting division by 0 errors that hadnt shown up in the translational hydro, i suspect this is because of the 1/r^3 terms. There may be a better method than this
+            r_min = 2.0 * a
+            if r < r_min:
+                r = r_min
+
+            rhat = rvec / np.linalg.norm(rvec)  
+
+            #RR
+            pref_RR = kT / (16.0 * np.pi * eta * r**3)
+            D_RR = pref_RR * (np.eye(3) - 3.0 * np.outer(rhat, rhat))
+
+            row_rot_j = 3*N + 3*j
+
+            D6[row_rot_i:row_rot_i+3,
+               row_rot_j:row_rot_j+3] = D_RR
+
+            D6[row_rot_j:row_rot_j+3,
+               row_rot_i:row_rot_i+3] = D_RR
+
+            #TR
+            C = np.array([[0,        -rhat[2],  rhat[1]],
+                          [rhat[2],   0,       -rhat[0]],
+                          [-rhat[1],  rhat[0],  0       ]])
+
+            pref_TR = kT / (8.0 * np.pi * eta * r**2)
+
+            D_TR = pref_TR * C
+            #RT should just be TR transposed
+            D_RT = D_TR.T
+
+            row_trans_i = 3*i
+            row_trans_j = 3*j
+
+            D6[row_trans_i:row_trans_i+3,
+               row_rot_j:row_rot_j+3] = D_TR
+
+            D6[row_trans_j:row_trans_j+3,
+               row_rot_i:row_rot_i+3] = -D_TR
+
+            D6[row_rot_j:row_rot_j+3,
+               row_trans_i:row_trans_i+3] = D_RT
+
+            D6[row_rot_i:row_rot_i+3,
+               row_trans_j:row_trans_j+3] = -D_RT
+
+    D6 = 0.5 * (D6 + D6.T)
+
+    return D6
+
+
+def coupled_bd_stepper(position_vectors,
+                             array_of_rotated_dipoles,
+                             total_force_array,
+                             total_torques,
+                             particle_radius,
+                             timestep,
+                             tensor_choice='RP',
+                             brownian=False):
+    
+    N = len(position_vectors)
+    if tensor_choice.upper() == 'BLAKE':
+        raise ValueError("Coupled BD not compatable with walls.")
+
+    D6 = grand_diffusion_matrix(position_vectors, particle_radius,
+                                tensor_choice=tensor_choice,
+                                wall_height=0.0)   #cant actually use walls but diffusion_matrix expects some value
+
+    
+
+    F_trans = np.hstack(total_force_array).astype(float)   
+    T_rot   = np.hstack(total_torques).astype(float)       
+    Fg = np.concatenate([F_trans, T_rot])                  
+
+    kT = ct.k_B * ct.temperature
+    sumDijFj = (1.0 / kT) * (D6 @ Fg)   
+    drift = sumDijFj * timestep
+
+    if brownian:
+
+        cov = 2.0 * D6 * timestep
+
+        #this was my first attempt at stopping the division by 0 at low seperations 
+        eps = 1e-18 * np.trace(cov) / cov.shape[0]
+        cov += eps * np.eye(6 * N)
+
+        L = np.linalg.cholesky(cov)
+        xi = np.random.normal(size=6 * N)
+
+        R = L @ xi
+
+    else:
+        R = np.zeros(6 * N)
+
+    delta_y = drift + R  
+
+    delta_trans = delta_y[:3 * N].reshape((N, 3))
+    new_positions = position_vectors + delta_trans
+
+
+    for p in range(N):
+        rotvec = delta_y[3 * N + 3 * p : 3 * N + 3 * p + 3]
+        rot = Rotation.from_rotvec(rotvec)
+        array_of_rotated_dipoles[p] = rot.apply(array_of_rotated_dipoles[p])
+
+    return new_positions, array_of_rotated_dipoles
 
 def trans_bd_hi(position_vectors, radius, total_force_array, number_of_particles, timestep, tensor_choice='OSEEN', wall_height=0.0):
     """

@@ -23,6 +23,7 @@ def kabsch_quaternion(dipole_primitive, dipoles_rotated):
     #started with kabsch giving a rotation matrix then converting to quaternions but this is quicker and just as specific
     P = dipole_primitive
     Q = dipoles_rotated
+    print("Q",Q)
     P = P - P.mean(axis=0)
     Q = Q - Q.mean(axis=0)
     H = P.T @ Q
@@ -114,7 +115,6 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
     # Generate a list of dipoles for one sphere
     #
     dipole_primitive, _ = dipoles.sphere_positions(sphere_radius, dipole_radius)
-    
     '''
     Now calculate new dipole rotations and store it
     So store dipole_primitive and tipole_primitive t-1 separate for each particle
@@ -239,7 +239,7 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         if include_gravity == True:
             gravity = pyf.gravity_force_array(number_of_particles, position_vectors, radius)
             total_force_array += gravity
-        if include_rotation == True:
+        if include_rotation == True and dynamics_method != 'COUPLED_ROTATION':
             rotational_drag = 1/(8* np.pi * ct.viscosity * radius**3)
             total_torques = couples+torques
             #total_torques = total_torques*10000000000000000000
@@ -262,6 +262,31 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         #
         # Brownian dynamics with constraints (SHAKE_HI) hydrodynamics (translational) and choice of Oseen, Rotne-Prager, and Rotne-Prager-Blake tensor.  The Blake tensor also requires a wall to be specified on the z-axis.
         #
+        elif dynamics_method=='COUPLED_ROTATION':
+            total_torques = couples + torques   
+            total_torques = [[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
+            print("total_torques", total_torques)
+            total_force_array = [[5e-12,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
+            print("total_force_array", total_force_array)   
+            brownian = False
+            
+
+            new_positions, array_of_rotated_dipoles = hydro.coupled_bd_stepper(
+                position_vectors,
+                array_of_rotated_dipoles,
+                total_force_array,
+                total_torques,
+                radius,
+                timestep,
+                tensor_choice=hi_method,
+                brownian=False)
+
+            position_vectors = new_positions
+
+
+            for particle_iterator in range(number_of_particles):
+                q = kabsch_quaternion(dipole_primitive, array_of_rotated_dipoles[particle_iterator])
+                allqs[i,particle_iterator] = q    
         elif dynamics_method=='BD_TRANS_SHAKE_HI' or dynamics_method=='SHAKE_HI': # SHAKE_HI Deprecated
             new_positions, final_separation_list = hydro.trans_bd_shake_hi(position_vectors, radius, total_force_array, number_of_particles, timestep, separation_list, constrained_separation, pair_constraints, tensor_choice=hi_method, wall_height=wall_position)
 
@@ -541,7 +566,7 @@ z_offset = 0.0 # for most other situations
 #=============================================
 
 initialT = time.time()
-particles,optpos, optforces,optcouples,dipole_positions, dipole_above_zero,dipole_below_zero = perform_simulation(n_particles, positions, radius, dipole_radius)
+particles,optpos, optforces,optcouples,dipole_positions, dipole_above_zero,dipole_below_zero, allqs = perform_simulation(n_particles, positions, radius, dipole_radius)
 _, number_of_dipoles = dipoles.sphere_positions(radius, dipole_radius)
 print(len(particles))
 finalT = time.time()
@@ -555,7 +580,7 @@ if display.show_output==True:
 
     fig,ax = display.plot_intensity(beam_collection)
 
-    parpole_ani = display.plot_parpoles(fig,ax,particles,dipole_positions,radius,colors,dipole_above_zero,dipole_below_zero)
+    parpole_ani = display.plot_parpoles(fig,ax,particles,dipole_positions,radius,colors,dipole_above_zero,dipole_below_zero, allqs)
     #particle_ani = display.animate_particles(fig,ax,particles,radius,colors)
     #dipole_ani = display.animate_dipoles(fig,ax,dipole_positions,radius,colors)
     #particle_ani = display.animate_particles(fig,ax,particles,radius,colors)
