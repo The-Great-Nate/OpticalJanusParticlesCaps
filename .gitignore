@@ -11,5 +11,9 @@ Original-Program-DO-NOT-TOUCH/
 *.yml
 *.txt
 *.pyc
+*,txt
+*.dylib
+*.so
+*.o
 .venv/
 .vscode/
