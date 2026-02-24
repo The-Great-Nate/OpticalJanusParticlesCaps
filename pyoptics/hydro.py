@@ -504,4 +504,3 @@ def trans_bd_shake_hi(position_vectors, radius, total_force_array, number_of_par
         r_prime_list += r_prime_change
             
     return current_positions, separation_list
-

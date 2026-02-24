@@ -264,9 +264,9 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         #
         elif dynamics_method=='COUPLED_ROTATION':
             total_torques = couples + torques   
-            total_torques = [[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
+            total_torques = [[0,0,np.pi/3000000000000000000],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
             print("total_torques", total_torques)
-            total_force_array = [[5e-12,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
+            total_force_array = [[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
             print("total_force_array", total_force_array)   
             brownian = False
             
@@ -445,7 +445,7 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
 
     # if i == number_of_timesteps-1:
     #     print("allqs", allqs) 
-    return xyz_list1,optpos,optforce,optcouple,dipole_positions_all,dipole_above_zero,dipole_below_zero
+    return xyz_list1,optpos,optforce,optcouple,dipole_positions_all,dipole_above_zero,dipole_below_zero, allqs
 
 
 
