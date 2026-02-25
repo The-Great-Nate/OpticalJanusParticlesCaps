@@ -1,12 +1,12 @@
 simulation:
-  frames: 24000
+  frames: 12000
   include_dynamics: True
   dynamics_method: ONLY_OPTICS
   include_springs: False
   include_bending: False
   include_nonbonded: True
   include_optics: True
-  include_rotation: True 
+  include_rotation: True
   optics_method: SH_DDA
 parameters:
   wavelength: 1.064e-6 # meters in vacuum
@@ -15,7 +15,7 @@ parameters:
 output:
   vmd_output: False
   excel_output: True
-  hdf_output: True
+  hdf_output: False
   include_force: True
   include_couple: True
 display:
@@ -24,18 +24,18 @@ display:
   max_size: 20e-6 # range will be 2 times this
   resolution: 201 # number of points in each direction of plot
   frame_min: 0 # starting frame for animation
-  frame_max: 24000 # will default to number of frames
+  frame_max: 12000 # will default to number of frames
   z_offset: 0.0e-6
 beams:
   beam_1:
     beamtype: BEAMTYPE_PLANE # parameter
-    E0: 2.000e+06
+    E0: 1.000e+06
     translation: 0.0 0.0 0.0 # translation in meters or None
     rotation: 0.0 0.0 # x rotation followed by z rotation in degrees or None
     jones: POLARISATION_LCP
   beam_2:
    beamtype: BEAMTYPE_PLANE # parameter
-   E0: 2.000e+06
+   E0: 1.000e+06
    translation: 0.0 0.0 0.0 # translation in meters or None
    rotation: 180.0 0.0 # x rotation followed by z rotation in degrees or None
    jones: POLARISATION_RCP

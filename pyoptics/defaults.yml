@@ -51,6 +51,7 @@ output:
   hdf_output: False
   include_force: True
   include_couple: True
+  include_orientation: True
 #============================================================================================
 # Display parameters
 #============================================================================================
@@ -81,6 +82,7 @@ particles:
   default_radius: 200e-9
   default_material: FusedSilica
   default_density: 2200
+  default_orientation: 1.0 0.0 0.0 0.0
 #============================================================================================
 # Topology descriptions
 #============================================================================================

@@ -14,7 +14,7 @@
 # optics_method names: SH_DDA, MOSH_DDA, SH_DDA_NI (non-interacting)
 #============================================================================================
 simulation:
-  frames: 500
+  frames: 750
   include_dynamics: True
   dynamics_method: BD_TRANS_SHAKE_HI
   hi_method: OSEEN
@@ -41,10 +41,10 @@ parameters:
 # Output parameters
 #============================================================================================
 output:
-  vmd_output: True
-  excel_output: True
-  include_force: True
-  include_couple: True
+  vmd_output: False
+  excel_output: False
+  include_force: False
+  include_couple: False
 #============================================================================================
 # Display parameters
 #============================================================================================

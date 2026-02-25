@@ -23,7 +23,6 @@ def kabsch_quaternion(dipole_primitive, dipoles_rotated):
     #started with kabsch giving a rotation matrix then converting to quaternions but this is quicker and just as specific
     P = dipole_primitive
     Q = dipoles_rotated
-    print("Q",Q)
     P = P - P.mean(axis=0)
     Q = Q - Q.mean(axis=0)
     H = P.T @ Q
@@ -44,7 +43,17 @@ def kabsch_quaternion(dipole_primitive, dipoles_rotated):
         q = -q
     #this could probably be adapted to only run once at the end of the sim and calculate all the rotations at once from our list of all dipoles across all timesteps, maybe quicker?
     return q
-def perform_simulation(number_of_particles, positions, sphere_radius, dipole_radius):
+
+def quaternion_to_rotation_matrix(q):
+    ### I LOVE THE INTERNET ###
+    w, x, y, z = q
+    return np.array([
+        [1 - 2*y**2 - 2*z**2, 2*x*y - 2*z*w, 2*x*z + 2*y*w],
+        [2*x*y + 2*z*w, 1 - 2*x**2 - 2*z**2, 2*y*z - 2*x*w],
+        [2*x*z - 2*y*w, 2*y*z + 2*x*w, 1 - 2*x**2 - 2*y**2]
+    ])
+
+def perform_simulation(number_of_particles, positions, sphere_radius, dipole_radius, array_of_rotated_dipoles):
 
     position_vectors = positions
     #print(positions)
@@ -114,13 +123,13 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
     #
     # Generate a list of dipoles for one sphere
     #
-    dipole_primitive, _ = dipoles.sphere_positions(sphere_radius, dipole_radius)
+    # dipole_primitive, _ = dipoles.sphere_positions(sphere_radius, dipole_radius)
     '''
     Now calculate new dipole rotations and store it
     So store dipole_primitive and tipole_primitive t-1 separate for each particle
     
     '''
-
+    dipole_primitive, number_of_dipoles = dipoles.sphere_positions(radius, dipole_radius)
     
     #
     #=========================================================
@@ -129,7 +138,7 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
 
     #if excel_output==True:
     optpos = np.zeros((frames,n_particles,3))
-    dipole_positions_all = np.zeros((frames,dipole_primitive.shape[0]*n_particles,3))
+    dipole_positions_all = np.zeros((frames,array_of_rotated_dipoles.shape[1]*n_particles,3))
     if include_force==True:
         optforce = np.zeros((frames,n_particles,3))
     else:
@@ -138,8 +147,10 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         optcouple = np.zeros((frames,n_particles,3))
     else:
         optcouple = None
-
-    rotated_dipoles = dipole_primitive
+    if include_orientation == True:
+        allqs = np.zeros((frames, n_particles, 4))
+    else:
+        allqs = None
     #=========================================================
     # Main simulation loop
     #=========================================================
@@ -149,28 +160,28 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         # All changes inside optical_force_array().
         #
         #optical,couples = optical_force_array(position_vectors, E0, dipole_radius, dipole_primitive)
-        if i == 0:
+        # if i == 0:
             
-            allqs = np.zeros((number_of_timesteps, n_particles, 4))
-            list_of_ref_inds = []
-            rotated_dipoles = dipole_primitive
-            array_of_rotated_dipoles = np.tile(rotated_dipoles, (number_of_particles, 1, 1))
-            dipole_above_zero = []
-            dipole_below_zero = []
-            count = 0
-            for tempparticle in range(number_of_particles):
-                templist = []
-                for dipole in rotated_dipoles:
-                    if dipole[0] > 0:
-                        templist.append(inverse_polarizabilitys[tempparticle][0])
-                        dipole_above_zero.append(count)
-                    else:
-                        templist.append(inverse_polarizabilitys[tempparticle][1])
-                        dipole_below_zero.append(count)
-                    count += 1
-                temparray = np.array(templist)
-                list_of_ref_inds.append(temparray)
-            array_of_ref_inds = np.array(list_of_ref_inds)
+        #     allqs = np.zeros((number_of_timesteps, n_particles, 4))
+        #     list_of_ref_inds = []
+        #     rotated_dipoles = dipole_primitive
+        #     array_of_rotated_dipoles = np.tile(rotated_dipoles, (number_of_particles, 1, 1))
+        #     dipole_above_zero = []
+        #     dipole_below_zero = []
+        #     count = 0
+        #     for tempparticle in range(number_of_particles):
+        #         templist = []
+        #         for dipole in rotated_dipoles:
+        #             if dipole[0] > 0:
+        #                 templist.append(inverse_polarizabilitys[tempparticle][0])
+        #                 dipole_above_zero.append(count)
+        #             else:
+        #                 templist.append(inverse_polarizabilitys[tempparticle][1])
+        #                 dipole_below_zero.append(count)
+        #             count += 1
+        #         temparray = np.array(templist)
+        #         list_of_ref_inds.append(temparray)
+        #     array_of_ref_inds = np.array(list_of_ref_inds)
         # print(f"rot_dipoles\n{array_of_rotated_dipoles}")
         # print(f"rot_dipoles-shape\n{array_of_rotated_dipoles.shape}")
         # print(array_of_ref_inds)
@@ -198,6 +209,10 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
             for j in range(n_particles):
                 for k in range(3):
                     optcouple[i,j,k] = couples[j][k] + torques[j][k]
+        if include_orientation == True:
+            for j in range(n_particles):
+                q = kabsch_quaternion(dipole_primitive, array_of_rotated_dipoles[j])
+                allqs[i,j] = q
 
         
         #    print(i,optical[1])
@@ -239,7 +254,7 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         if include_gravity == True:
             gravity = pyf.gravity_force_array(number_of_particles, position_vectors, radius)
             total_force_array += gravity
-        if include_rotation == True and dynamics_method != 'COUPLED_ROTATION':
+        if include_rotation == True:
             rotational_drag = 1/(8* np.pi * ct.viscosity * radius**3)
             total_torques = couples+torques
             #total_torques = total_torques*10000000000000000000
@@ -251,8 +266,8 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
                 rotvec = angular_velocity * timestep
                 rot = Rotation.from_rotvec(rotvec)
                 array_of_rotated_dipoles[particle_iterator] = rot.apply(array_of_rotated_dipoles[particle_iterator])
-                q = kabsch_quaternion(dipole_primitive, array_of_rotated_dipoles[particle_iterator])
-                allqs[i,particle_iterator] = q
+                # q = kabsch_quaternion(dipole_primitive, array_of_rotated_dipoles[particle_iterator])
+                # allqs[i,particle_iterator] = q
      #
         # Brownian dynamics with hydrodynamics (translational) and choice of Oseen, Rotne-Prager, and Rotne-Prager-Blake tensor
         #
@@ -264,10 +279,8 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         #
         elif dynamics_method=='COUPLED_ROTATION':
             total_torques = couples + torques   
-            total_torques = [[0,0,np.pi/3000000000000000000],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
-            print("total_torques", total_torques)
-            total_force_array = [[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0],[0,0,0]]
-            print("total_force_array", total_force_array)   
+            total_torques = [[0,0,0],[0,0,0],[0,0,0]]
+            total_force_array = [[0,0,0],[0,0,0],[0,0,0]]
             brownian = False
             
 
@@ -351,7 +364,6 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
             new_positions[1,1] = myradius*np.cos(theta+np.pi)
             new_positions[0,2] = z_com+myradius*np.sin(theta)
             new_positions[1,2] = z_com+myradius*np.sin(theta+np.pi)
-
         elif dynamics_method=='X_SCAN':
             dx = 10e-9
             dy = 0.0
@@ -490,6 +502,7 @@ excel_output = output.excel_output
 hdf_output = output.hdf_output
 include_force = output.include_force
 include_couple = output.include_couple
+include_orientation = output.include_orientation
 #===========================================================================
 # Read display options
 #===========================================================================
@@ -514,9 +527,10 @@ radius = radii[0] # because we cannot handle variable radii yet.
 density = particle_collection.get_particle_density()
 rho = density[0] # not yet implemented.
 positions = particle_collection.get_particle_positions()
+orientations = particle_collection.get_particle_orientations()
 
 for i in range(n_particles):
-    print(i,particle_types[i],ref_ind[i],colors[i],radii[i],density[i],positions[i])
+    print(i,particle_types[i],ref_ind[i],colors[i],radii[i],density[i],positions[i],orientations[i])
 #===========================================================================
 # Set up particle polarisabilities and other spurious options
 #===========================================================================`
@@ -544,6 +558,35 @@ inverse_polarizabilitys = np.ascontiguousarray(inverse_polarizabilitys)
 
 inverse_polarizability = np.ascontiguousarray(inverse_polarizabilitys[:,0])
 inverse_polarizability_2 = np.ascontiguousarray(inverse_polarizabilitys[:,1])
+
+primitive, number_of_dipoles = dipoles.sphere_positions(radius, dipole_radius)
+
+
+### Setup new arrays for storing dipole positions and reference indices for each particle, and apply initial rotation to dipoles
+list_of_ref_inds = []
+rotated_dipoles = primitive
+array_of_rotated_dipoles = np.tile(rotated_dipoles.astype(np.float64), (n_particles, 1, 1))
+dipole_above_zero = []
+dipole_below_zero = []
+count = 0
+for tempparticle in range(n_particles):
+    templist = []
+    for dipole in rotated_dipoles:
+        if dipole[0] > 0:
+            templist.append(inverse_polarizabilitys[tempparticle][0])
+            dipole_above_zero.append(count)
+        else:
+            templist.append(inverse_polarizabilitys[tempparticle][1])
+            dipole_below_zero.append(count)
+        count += 1
+    temparray = np.array(templist)
+    list_of_ref_inds.append(temparray)
+array_of_ref_inds = np.array(list_of_ref_inds)
+
+### Apply initial quaternion rotation to dipoles
+for particle_iterator in range(n_particles):
+    init_rotation = quaternion_to_rotation_matrix(orientations[particle_iterator])
+    array_of_rotated_dipoles[particle_iterator] = array_of_rotated_dipoles[particle_iterator] @ init_rotation.T
 # print(inverse_polarizability)
 # print(inverse_polarizability_2)
 '''
@@ -566,8 +609,7 @@ z_offset = 0.0 # for most other situations
 #=============================================
 
 initialT = time.time()
-particles,optpos, optforces,optcouples,dipole_positions, dipole_above_zero,dipole_below_zero, allqs = perform_simulation(n_particles, positions, radius, dipole_radius)
-_, number_of_dipoles = dipoles.sphere_positions(radius, dipole_radius)
+particles,optpos, optforces,optcouples,dipole_positions, dipole_above_zero,dipole_below_zero, allqs = perform_simulation(n_particles, positions, radius, dipole_radius, array_of_rotated_dipoles)
 print(len(particles))
 finalT = time.time()
 print("Elapsed time: {:8.6f} s".format(finalT-initialT))
@@ -585,11 +627,11 @@ if display.show_output==True:
     #dipole_ani = display.animate_dipoles(fig,ax,dipole_positions,radius,colors)
     #particle_ani = display.animate_particles(fig,ax,particles,radius,colors)
     #print(particles)
-    ax.set_xlim(-6E-6,6E-6)
-    ax.set_ylim(-6E-6,6E-6)
+    ax.set_xlim(-1E-6,3E-6)
+    ax.set_ylim(-1E-6,3E-6)
     parpole_ani.save(f"{filestem}.mp4", dpi = 300, fps=60)
     print("==========================")
-    # plt.show()
+    plt.show()
     print("--------------------------")
     #print(dipole_positions)
 #===========================================================================
@@ -600,7 +642,7 @@ if vmd_output==True:
     output.make_vmd_file(filename_vtf,n_particles,frames,timestep,particles,optpos,beam_collection,finalT-initialT,radius,dipole_radius,z_offset,particle_types,vtfcolors)
 
 if excel_output==True:
-    output.make_excel_file(filename_xl,n_particles,frames,timestep,particles,optpos,include_force,optforces,include_couple,optcouples)
+    output.make_excel_file(filename_xl,n_particles,frames,timestep,particles,optpos,include_force,optforces,include_couple,optcouples,include_orientation,allqs)
 
 if hdf_output==True:
     h5file = h5py.File(filename_hdf,'w')
@@ -610,5 +652,6 @@ if hdf_output==True:
         h5file.create_dataset('forces',data=optforces)
     if include_couple==True:
         h5file.create_dataset('couples',data=optcouples)
+    if include_orientation==True:
+        h5file.create_dataset('orientations',data=allqs)
     h5file.close()
-

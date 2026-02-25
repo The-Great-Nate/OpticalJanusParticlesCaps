@@ -27,17 +27,29 @@ display:
   z_offset: 0.0e-6
 beams:
   beam_1:
-    beamtype: BEAMTYPE_GAUSS_CSP # parameter
-    E0: 3.000e+06
-    w0: 3.44 # fraction of wavelength
-    translation: 0.0 0.0 -50e-6 # translation in meters or None
+    beamtype: BEAMTYPE_PLANE # parameter
+    E0: 1.000e+06
+    translation: 0.0 0.0 0.0 # translation in meters or None
     rotation: 0.0 0.0 # x rotation followed by z rotation in degrees or None
-#  beam_2:
-#    beamtype: BEAMTYPE_GAUSS_CSP # parameter
-#    E0: 4.000e+06
-#    w0: 3.44 # fraction of wavelength
-#    translation: 0.0 0.0 -5e-5 # translation in meters or None
-#    rotation: 180.0 0.0 # x rotation followed by z rotation in degrees or None
+    jones: POLARISATION_LCP
+  beam_2:
+   beamtype: BEAMTYPE_PLANE # parameter
+   E0: 1.000e+06
+   translation: 0.0 0.0 0.0 # translation in meters or None
+   rotation: 180.0 0.0 # x rotation followed by z rotation in degrees or None
+   jones: POLARISATION_RCP
+#   beam_1:
+#     beamtype: BEAMTYPE_GAUSS_CSP # parameter
+#     E0: 3.000e+06
+#     w0: 3.44 # fraction of wavelength
+#     translation: 0.0 0.0 -50e-6 # translation in meters or None
+#     rotation: 0.0 0.0 # x rotation followed by z rotation in degrees or None
+# #  beam_2:
+# #    beamtype: BEAMTYPE_GAUSS_CSP # parameter
+# #    E0: 4.000e+06
+# #    w0: 3.44 # fraction of wavelength
+# #    translation: 0.0 0.0 -5e-5 # translation in meters or None
+# #    rotation: 180.0 0.0 # x rotation followed by z rotation in degrees or None
 particles:
   default_radius: 2e-07
   default_material: Sapphire

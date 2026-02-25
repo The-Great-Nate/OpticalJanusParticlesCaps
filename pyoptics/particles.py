@@ -21,6 +21,7 @@ class ParticleCollection (object):
             self.particle_vtfcolour = np.asarray([self.get_particle_spec(particlespecs,self.default_material,'vtf_colour_name')])
             self.particle_density = np.asarray([self.default_density])
             self.particle_positions = np.zeros((1,3),dtype=float)
+            self.particle_orientations = np.array([1.0,0.0,0.0,0.0],dtype=float)
         else:
             # Read from file
             self.default_material = particleinfo.get('default_material',particledefaults['default_material'])
@@ -37,6 +38,7 @@ class ParticleCollection (object):
                 self.particle_colour = np.asarray([self.get_particle_spec(particlespecs,self.default_material,'display_colour')])
                 self.particle_vtfcolour = np.asarray([self.get_particle_spec(particlespecs,self.default_material,'vtf_colour_name')])
                 self.particle_positions = np.zeros((1,3),dtype=float)
+                self.particle_orientations = np.array([1.0,0.0,0.0,0.0],dtype=float)
             else:
                 # Read individual particles
                 i=0
@@ -45,12 +47,14 @@ class ParticleCollection (object):
                 self.particle_colour = []
                 self.particle_vtfcolour = []
                 self.particle_positions = []
+                self.particle_orientations = []
                 self.particle_indices = []
                 self.particle_density = []
                 for newparticle in self.particle_list:
                     particle = self.particle_list[newparticle]
                     print("Loading particle",particle)
                     if "material1" in particle.keys():
+                        print("Loading Janus particle")
                         material1 = particle["material1"]
                         material2 = particle["material2"]
                         materials = [material1, material2]
@@ -66,14 +70,19 @@ class ParticleCollection (object):
                             self.particle_vtfcolour.append(self.get_particle_spec(particlespecs,self.particle_type[i][material],'vtf_colour_name'))
                             self.particle_indices.append(self.get_particle_spec(particlespecs,self.particle_type[i][material],'refractive_index'))
                         self.coords = particle.get('coords',"0.0 0.0 0.0")
+                        self.orientations = particle.get('orientation',"1.0 0.0 0.0 0.0")   
                         self.fields = self.coords.split(" ")
+                        self.orientation_fields = self.orientations.split(" ")
                         if self.fields[0]=="None":
                             self.particle_positions.append(np.array((0.0,0.0,0.0),dtype=np.float64))
                         else:
                             self.particle_positions.append(np.array((0.0,0.0,0.0),dtype=np.float64))
                             for j in range(min(len(self.fields),3)):
                                 self.particle_positions[i][j] = float(self.fields[j])
-
+                        if self.orientation_fields[0]=="None":
+                            self.particle_orientations.append(np.array((1.0,0.0,0.0,0.0),dtype=np.float64))
+                        else:
+                            self.particle_orientations.append(np.array((float(self.orientation_fields[0]),float(self.orientation_fields[1]),float(self.orientation_fields[2]),float(self.orientation_fields[3])),dtype=np.float64))
                     elif particle != None:
                         material1 = particle.get('material',self.default_material)
                         material2 = material1
@@ -90,15 +99,21 @@ class ParticleCollection (object):
                             self.particle_vtfcolour.append(self.get_particle_spec(particlespecs,self.particle_type[i][material],'vtf_colour_name'))
                             self.particle_indices.append(self.get_particle_spec(particlespecs,self.particle_type[i][material],'refractive_index'))
                             self.coords = particle.get('coords',"0.0 0.0 0.0")
+                            self.orientations = particle.get('orientation',"1.0 0.0 0.0 0.0")   
                         self.fields = self.coords.split(" ")
+                        self.orientation_fields = self.orientations.split(" ")
                         if self.fields[0]=="None":
                             self.particle_positions.append(np.array((0.0,0.0,0.0),dtype=np.float64))
                         else:
                             self.particle_positions.append(np.array((0.0,0.0,0.0),dtype=np.float64))
                             for j in range(min(len(self.fields),3)):
                                 self.particle_positions[i][j] = float(self.fields[j])
+                        if self.orientation_fields[0]=="None":
+                            self.particle_orientations.append(np.array((1.0,0.0,0.0,0.0),dtype=np.float64))
+                        else:
+                            self.particle_orientations.append(np.array((float(self.orientation_fields[0]),float(self.orientation_fields[1]),float(self.orientation_fields[2]),float(self.orientation_fields[3])),dtype=np.float64))
                     else:
-                        # not sure this part is ever used
+                        # not sure this part is ever used - lol neither do i...
                         self.particle_type.append(self.default_material)
                         self.particle_radius.append(self.default_radius)
                         self.particle_density.append(self.default_density)
@@ -106,6 +121,7 @@ class ParticleCollection (object):
                         self.particle_colour.append(self.get_particle_spec(particlespecs,self.default_material,'display_colour'))
                         self.particle_vtfcolour.append(self.get_particle_spec(particlespecs,self.default_material,'vtf_colour_name'))
                         self.particle_positions.append(np.array((0.0,0.0,0.0),dtype=np.float64))
+                        self.particle_orientations.append(np.array((1.0,0.0,0.0,0.0),dtype=np.float64))
                     i+=1
                 ParticleCollection.num_particles = i
 
@@ -143,4 +159,7 @@ class ParticleCollection (object):
 
     def get_particle_positions(self):
         return np.asarray(self.particle_positions,dtype=float).reshape((ParticleCollection.num_particles,3))
+    
+    def get_particle_orientations(self):
+        return np.asarray(self.particle_orientations,dtype=float).reshape((ParticleCollection.num_particles,4))
     

@@ -13,6 +13,7 @@ class OutputObject (object):
         self.hdf_output = bool(self.set_option_value(optioninfo,optiondefaults,'hdf_output'))
         self.include_force = bool(self.set_option_value(optioninfo,optiondefaults,'include_force'))
         self.include_couple = bool(self.set_option_value(optioninfo,optiondefaults,'include_couple'))
+        self.include_orientation = bool(self.set_option_value(optioninfo,optiondefaults,'include_orientation'))
 
     def set_option_value(self,optioninfo,optiondefaults,name):
         if optioninfo==None:
@@ -108,7 +109,7 @@ class OutputObject (object):
         MyFileObject.close()  # closes the file again
         return
 
-    def make_excel_file(self,filename_xl,n_particles,frames,timestep,particles,optpos,include_force,optforces,include_couple,optcouples):
+    def make_excel_file(self,filename_xl,n_particles,frames,timestep,particles,optpos,include_force,optforces,include_couple,optcouples,include_orientation,allqs):
         """
         Function to generate excel output file.
         Inputs:
@@ -142,6 +143,19 @@ class OutputObject (object):
                 worksheet.write(0,(j+offset)*3+1,"Cx{:d}(Nm)".format(j))
                 worksheet.write(0,(j+offset)*3+2,"Cy{:d}(Nm)".format(j))
                 worksheet.write(0,(j+offset)*3+3,"Cz{:d}(Nm)".format(j))
+        if include_orientation == True:
+            offset = 1
+            if include_force:
+                offset += 3*n_particles
+            if include_couple:
+                offset += 3*n_particles
+            for j in range(n_particles):
+                base_col = offset + j*4
+
+                worksheet.write(0, base_col + 0, f"qw{j}")
+                worksheet.write(0, base_col + 1, f"qx{j}")
+                worksheet.write(0, base_col + 2, f"qy{j}")
+                worksheet.write(0, base_col + 3, f"qz{j}")
 
         # Iterate over the data and write it out row by row.
         for i in range(0, frames, 1):
@@ -160,6 +174,20 @@ class OutputObject (object):
                 for j in range (n_particles):
                     for k in range (3):
                         worksheet.write(i+1,(j+offset)*3+k+1,optcouples[i][j][k])
+            if include_orientation == True:            
+                offset = 1
+                if include_force:
+                    offset += 3*n_particles
+                if include_couple:
+                    offset += 3*n_particles
+
+                for j in range(n_particles):
+                    base_col = offset + j*4
+
+                    worksheet.write(i+1, base_col + 0, allqs[i][j][0])  # qw
+                    worksheet.write(i+1, base_col + 1, allqs[i][j][1])  # qx
+                    worksheet.write(i+1, base_col + 2, allqs[i][j][2])  # qy
+                    worksheet.write(i+1, base_col + 3, allqs[i][j][3])  # qz
 
         workbook.close()
         return
