@@ -254,7 +254,7 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         if include_gravity == True:
             gravity = pyf.gravity_force_array(number_of_particles, position_vectors, radius)
             total_force_array += gravity
-        if include_rotation == True:
+        if include_rotation == True and dynamics_method != "COUPLED_ROTATION":
             rotational_drag = 1/(8* np.pi * ct.viscosity * radius**3)
             total_torques = couples+torques
             #total_torques = total_torques*10000000000000000000
@@ -278,9 +278,7 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         # Brownian dynamics with constraints (SHAKE_HI) hydrodynamics (translational) and choice of Oseen, Rotne-Prager, and Rotne-Prager-Blake tensor.  The Blake tensor also requires a wall to be specified on the z-axis.
         #
         elif dynamics_method=='COUPLED_ROTATION':
-            total_torques = couples + torques   
-            total_torques = [[0,0,0],[0,0,0],[0,0,0]]
-            total_force_array = [[0,0,0],[0,0,0],[0,0,0]]
+            total_torques = couples + torques
             brownian = False
             
 
@@ -297,9 +295,9 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
             position_vectors = new_positions
 
 
-            for particle_iterator in range(number_of_particles):
-                q = kabsch_quaternion(dipole_primitive, array_of_rotated_dipoles[particle_iterator])
-                allqs[i,particle_iterator] = q    
+            # for particle_iterator in range(number_of_particles):
+            #     q = kabsch_quaternion(dipole_primitive, array_of_rotated_dipoles[particle_iterator])
+            #     allqs[i,particle_iterator] = q    
         elif dynamics_method=='BD_TRANS_SHAKE_HI' or dynamics_method=='SHAKE_HI': # SHAKE_HI Deprecated
             new_positions, final_separation_list = hydro.trans_bd_shake_hi(position_vectors, radius, total_force_array, number_of_particles, timestep, separation_list, constrained_separation, pair_constraints, tensor_choice=hi_method, wall_height=wall_position)
 
@@ -627,8 +625,8 @@ if display.show_output==True:
     #dipole_ani = display.animate_dipoles(fig,ax,dipole_positions,radius,colors)
     #particle_ani = display.animate_particles(fig,ax,particles,radius,colors)
     #print(particles)
-    ax.set_xlim(-1E-6,3E-6)
-    ax.set_ylim(-1E-6,3E-6)
+    ax.set_xlim(-7E-6,7E-6)
+    ax.set_ylim(-7E-6,7E-6)
     parpole_ani.save(f"{filestem}.mp4", dpi = 300, fps=60)
     print("==========================")
     plt.show()
