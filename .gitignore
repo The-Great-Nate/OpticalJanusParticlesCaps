@@ -17,7 +17,9 @@ Original-Program-DO-NOT-TOUCH/
 *.o
 .venv/
 .vscode/
-plotting-breams.py
+plotting-beams.py
+spinner_separation.py
+visualise-particle.py
 *.tar
 torques/
 standards/
