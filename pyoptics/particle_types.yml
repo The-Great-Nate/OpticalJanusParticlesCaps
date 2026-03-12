@@ -218,7 +218,7 @@ Standard235:
     vtf_colour_name: B
 Standard240:
     refractive_index: 2.4
-    display_colour: '#0f0f0f'
+    display_colour: '#b01240'
     alt_display_colour: '#1f1f1f'
     vtf_colour_name: B
 

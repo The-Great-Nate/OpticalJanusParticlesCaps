@@ -144,7 +144,7 @@ class OutputObject (object):
                 worksheet.write(0,(j+offset)*3+2,"Cy{:d}(Nm)".format(j))
                 worksheet.write(0,(j+offset)*3+3,"Cz{:d}(Nm)".format(j))
         if include_orientation == True:
-            offset = 1
+            offset = 1 + 3*n_particles 
             if include_force:
                 offset += 3*n_particles
             if include_couple:
@@ -175,7 +175,7 @@ class OutputObject (object):
                     for k in range (3):
                         worksheet.write(i+1,(j+offset)*3+k+1,optcouples[i][j][k])
             if include_orientation == True:            
-                offset = 1
+                offset = 1 + 3*n_particles 
                 if include_force:
                     offset += 3*n_particles
                 if include_couple:
@@ -190,6 +190,15 @@ class OutputObject (object):
                     worksheet.write(i+1, base_col + 3, allqs[i][j][3])  # qz
 
         workbook.close()
+        total_cols = 1 + n_particles*3
+        if include_force:
+            total_cols += n_particles*3
+        if include_couple:
+            total_cols += n_particles*3
+        if include_orientation:
+            total_cols += n_particles*4
+            
+        print(f"Debug: Total columns written: {total_cols}")
         return
     
     def make_excel_file_short(self,filename_xl,n_particles,frames,angle,optpos,optforces):

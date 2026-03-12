@@ -16,7 +16,10 @@ BEAMTYPE_GAUSS_BARTON5 = 1
 BEAMTYPE_GAUSS_CSP = 2
 BEAMTYPE_BESSEL = 3
 BEAMTYPE_LAGUERRE_GAUSSIAN = 4
-BEAMTYPE_SINGLE_MODE = 5
+#BEAMTYPE_SINGLE_MODE = 5
+BEAMTYPE_RICHARDS_WOLF = 5 # general purpose for LG and other beams
+BEAMTYPE_RICHARDS_WOLF_ANALYTIC = 6 # general purpose for LG and other beams
+BEAMTYPE_SINGLE_MODE = 7
 ###################################################################################
 # Jones vector names
 ###################################################################################
@@ -33,24 +36,18 @@ POLARISATION_iY = 7
 numpoints = 1
 
 # Find the library and load it
-#beams_path = ctypes.util.find_library(pyoptics.__path__[0]+"/beamslib")
-#if not beams_path:
-#    print("Unable to find the specified library ./beamslib.")
-#    sys.exit()
-#
-#try:
-#    Beams = ctypes.CDLL(beams_path)
-#except OSError:
-#    print("Unable to load the Beams C++ library")
-#    sys.exit()
-
 try:
     Beams = ctypes.cdll.LoadLibrary("./pyoptics/beamslib.dylib")
 except OSError:
     print("Unable to load the Beams C++ library")
     sys.exit()
 
-#
+# try:
+#     Beams = ctypes.CDLL(beams_path)
+# except OSError:
+#     print("Unable to load the Beams C++ library")
+#     sys.exit()
+# #
 # Beam class
 #
 class BEAM(ctypes.Structure):
@@ -68,7 +65,11 @@ class BEAM(ctypes.Structure):
         ('rotation', ctypes.c_double * 9),
         ('w0', ctypes.c_double),
         ('gouy', ctypes.c_int),
-        ('numkpoints', ctypes.c_int)
+        ('numkpoints', ctypes.c_int),
+        ('NA', ctypes.c_double),
+        ('nm', ctypes.c_double),
+        ('sigma', ctypes.c_double),
+        ('zernike', ctypes.c_double * 3)
     ]
 #
 # Beam collection class
@@ -195,7 +196,7 @@ def get_rotation_matrix(angle,zangle):
     return final_rotation.flatten()
     
     
-def make_beam(beam_type, E0, kk, kt_by_kz = 0.3, order = 0, gouy = 0, w0 = 1.2e-6, jones = None, rotation = None, translation = None, numkpoints = 20):
+def make_beam(beam_type, E0, kk, kt_by_kz = 0.3, order = 0, gouy = 0, w0 = 1.2e-6, jones = None, rotation = None, translation = None, numkpoints = 20, NA = 0.8, nm = 1.333, sigma=1.0, zernike = None):
     """
     Function to build a beam and return the structure.
     """
@@ -212,6 +213,9 @@ def make_beam(beam_type, E0, kk, kt_by_kz = 0.3, order = 0, gouy = 0, w0 = 1.2e-
     mybeam.w0 = w0
     mybeam.gouy = gouy
     mybeam.numkpoints = numkpoints # should be even
+    mybeam.NA = NA
+    mybeam.nm = nm
+    mybeam.sigma = sigma
 #
 # Build a Jones matrix
 #
@@ -237,6 +241,14 @@ def make_beam(beam_type, E0, kk, kt_by_kz = 0.3, order = 0, gouy = 0, w0 = 1.2e-
         mybeam.translation = np.ctypeslib.as_ctypes(beamposition)
     else:
         mybeam.translation = np.ctypeslib.as_ctypes(translation)
+#
+# zernike coefficients
+#
+    if zernike is None:
+        coeffs = np.array((0.0,0.0,0.0),dtype=np.float64) # specify position in metres
+        mybeam.zernike = np.ctypeslib.as_ctypes(coeffs)
+    else:
+        mybeam.zernike = np.ctypeslib.as_ctypes(zernike)
 
     return mybeam
     
@@ -257,7 +269,7 @@ def create_beam_collection(beaminfo,wavelength,nm=1.333):
         replaced by defaults.
     output: beam_collection (Ctypes struct array): an array of beams.
     """
-    BeamTypes = {"BEAMTYPE_PLANE": 0, "BEAMTYPE_GAUSS_BARTON5": 1, "BEAMTYPE_GAUSS_CSP": 2, "BEAMTYPE_BESSEL": 3, "BEAMTYPE_LAGUERRE_GAUSSIAN": 4, "BEAMTYPE_SINGLE_MODE": 5}
+    BeamTypes = {"BEAMTYPE_PLANE": 0, "BEAMTYPE_GAUSS_BARTON5": 1, "BEAMTYPE_GAUSS_CSP": 2, "BEAMTYPE_BESSEL": 3, "BEAMTYPE_LAGUERRE_GAUSSIAN": 4, "BEAMTYPE_RICHARDS_WOLF": 5, "BEAMTYPE_RICHARDS_WOLF_ANALYTIC": 6, "BEAMTYPE_SINGLE_MODE": 7}
     JonesTypes = {"POLARISATION_X":0, "POLARISATION_Y":1, "X":0, "Y":1, "x":0, "y":1, "POLARISATION_RCP":2, "POLARISATION_LCP":3, "iRCP":4,"POLARISATION_iRCP":4, "POLARISATION_iLCP":5, "iLCP":5, "HORIZONTAL": 0, "HOR": 0, "H": 0, "h": 0, "VERTICAL": 1, "VERT": 1, "V": 1, "v": 1, "RCP": 2, "rcp": 2, "LCP": 3, "lcp": 3, "POLARISATION_iX":6, "POLARISATION_iY":7}
 
     n_beams = len(beaminfo)
@@ -284,9 +296,13 @@ def create_beam_collection(beaminfo,wavelength,nm=1.333):
         beamposition = getbeamoption(beam,'translation')
         #
         numkpoints = int(getbeamoption(beam,'numkpoints'))
+        NA = float(getbeamoption(beam,'NA'))
+        nm = float(getbeamoption(beam,'nm'))
+        sigma = float(getbeamoption(beam,'sigma'))
+        zernike = getbeamoption(beam,'zernike')
 
         #beam_collection[i] = make_beam(beamtype, E0, kk, kt_by_kz=kt_by_kz, order=order, gouy=gouy, w0=w0, jones=jones_matrix, rotation=rotation_matrix, translation=beamposition, numkpoints=numkpoints)
-        next_beam = make_beam(beamtype, E0, kk, kt_by_kz=kt_by_kz, order=order, gouy=gouy, w0=w0, jones=jones_matrix, rotation=rotation_matrix, translation=beamposition, numkpoints=numkpoints)
+        next_beam = make_beam(beamtype, E0, kk, kt_by_kz=kt_by_kz, order=order, gouy=gouy, w0=w0, jones=jones_matrix, rotation=rotation_matrix, translation=beamposition, numkpoints=numkpoints, NA=NA, nm=nm, sigma=sigma, zernike=zernike)
         beam_collection.append(next_beam)
         i+=1
     collection = BEAM_COLLECTION(beam_collection)
@@ -309,6 +325,10 @@ def getbeamoption(beam,option):
                 "rotation":'0.0 0.0',
                 "translation":'0.0 0.0 0.0',
                 "numkpoints":20,
+                "NA":0.8,
+                "nm":1.333,
+                "sigma":1.0,
+                "zernike":'0.0 0.0 0.0'
                 }
 
     if option=="rotation":
@@ -333,6 +353,17 @@ def getbeamoption(beam,option):
             for j in range(min(len(fields),3)):
                 beamposition[j] = float(fields[j])
         return beamposition
+#
+    elif option=="zernike":
+        zernike = beam.get(option,Defaults[option][0])
+        fields = zernike.split(" ")
+        if fields[0]=="None":
+            zernike = np.array((0.0,0.0,0.0),dtype=np.float64)
+        else:
+            zernike = np.array((0.0,0.0,0.0),dtype=np.float64)
+            for j in range(min(len(fields),3)):
+                zernike[j] = float(fields[j])
+        return zernike
 #
     else:
         strvalue = beam.get(option,Defaults[option])

@@ -27,6 +27,7 @@ import matplotlib.animation as animation
 #import pyvista as pv
 #from pyvistaqt import BackgroundPlotter
 import pandas as pd
+from pyoptics import dipoles
 
 def init():
     for trajectory in trajectories:
@@ -50,7 +51,14 @@ def update_scene():
     # We update the whole plotter
     p.update()
 
-
+def quaternion_to_rotation_matrix(q):
+    ### I LOVE THE INTERNET ###
+    w, x, y, z = q
+    return np.array([
+        [1 - 2*y**2 - 2*z**2, 2*x*y - 2*z*w, 2*x*z + 2*y*w],
+        [2*x*y + 2*z*w, 1 - 2*x**2 - 2*z**2, 2*y*z - 2*x*w],
+        [2*x*z - 2*y*w, 2*y*z + 2*x*w, 1 - 2*x**2 - 2*y**2]
+    ])
 
 ###################################################################################
 # Start of program
@@ -89,6 +97,7 @@ excel_output = project.output.excel_output
 hdf_output = project.output.hdf_output
 include_force = project.output.include_force
 include_couple = project.output.include_couple
+include_orientation = project.output.include_orientation
 #===========================================================================
 # Read beam options and create beam collection
 #===========================================================================
@@ -111,9 +120,10 @@ radius = radii[0] # because we cannot handle variable radii yet.
 density = particle_collection.get_particle_density()
 rho = density[0] # not yet implemented.
 positions = particle_collection.get_particle_positions()
+orientations = particle_collection.get_particle_orientations()
 
 for i in range(n_particles):
-    print(i,particle_types[i],ref_ind[i],colors[i],radii[i],density[i],positions[i])
+    print(i,particle_types[i],ref_ind[i],colors[i],radii[i],density[i],positions[i],orientations[i])
 
 #===============================================================
 # Read the excel file with spins
@@ -121,10 +131,14 @@ for i in range(n_particles):
 if hdf_output==True:
     h5_file = h5py.File(filename_hdf, 'r')
     print(h5_file.keys())
+    for name in h5_file:
+        print(name, h5_file[name].shape)
     particles = h5_file['positions'][()]
     #particles = h5_file['particles'][()]
+    allqs = h5_file['orientations'][()]
     h5_file.close()
     print(particles.shape)
+    print(allqs.shape)
     #print(positions.shape)
 
 elif excel_output==True:
@@ -133,8 +147,16 @@ elif excel_output==True:
     npdata = dfl.to_numpy()
     print(npdata.shape)
     particles = np.zeros((frames,n_particles,3),dtype=np.float64)
+    allqs = np.zeros((frames, n_particles, 4))
+    quat_offset = 1 + 3*n_particles
+    if include_force:
+        quat_offset += 3*n_particles
+    if include_couple:
+        quat_offset += 3*n_particles
     for i in range(n_particles):
         particles[:,i,0:3] = npdata[:,1+i*3:1+(i+1)*3]
+        start = quat_offset + i*4
+        allqs[:, i, :] = npdata[:, start:start+4]
 
 else:
     sys.exit("Unable to find input file:", filename_xl,"or",filename_hdf)
@@ -179,11 +201,75 @@ for i in range(frames):
         for k in range(3):
             positions[j][k][i] = particles[i,j,k]
 
+
+#### 
+
+
+
 ###################################################################################
 # Do the animation
 ###################################################################################
 
 
+primitive, number_of_dipoles = dipoles.sphere_positions(radius, dipole_radius)
+dipole_above_zero = []
+dipole_below_zero = []
+
+
+rotated_dipoles = primitive
+array_of_rotated_dipoles = np.tile(rotated_dipoles.astype(np.float64), (n_particles, 1, 1))
+
+list_of_ref_inds = []
+dipole_above_zero = []
+dipole_below_zero = []
+count = 0
+for tempparticle in range(n_particles):
+    templist = []
+    for dipole in rotated_dipoles:
+        if dipole[0] > 0:
+            templist.append(ref_ind[tempparticle][0])
+            dipole_above_zero.append(count)
+        else:
+            templist.append(ref_ind[tempparticle][1])
+            dipole_below_zero.append(count)
+        count += 1
+    temparray = np.array(templist)
+    list_of_ref_inds.append(temparray)
+array_of_ref_inds = np.array(list_of_ref_inds)
+
+### Apply initial quaternion rotation to dipoles
+for particle_iterator in range(n_particles):
+    init_rotation = quaternion_to_rotation_matrix(orientations[particle_iterator])
+    array_of_rotated_dipoles[particle_iterator] = array_of_rotated_dipoles[particle_iterator] @ init_rotation.T
+
+n_dipoles = len(primitive)
+
+dipole_positions = np.zeros((frames, n_particles*n_dipoles, 3))
+
+for f in range(frames):
+    count = 0
+    for p in range(n_particles):
+
+        q = allqs[f, p]
+        rot = quaternion_to_rotation_matrix(q)
+
+        rotated_dipoles = primitive @ rot.T
+
+        for d in rotated_dipoles:
+            dipole_positions[f, count] = particles[f, p] + d
+            count += 1
+
+
+
+
 fig,ax = project.display.plot_intensity(beam_collection)
 
-project.display.animate_particles(fig,ax,positions,radius,colors)
+
+# print(dipole_positions[0,])
+# project.display.animate_particles(fig,ax,positions,radius,colors)
+
+parpole_ani = project.display.plot_parpoles(fig,ax,positions,dipole_positions,radius,colors,dipole_above_zero,dipole_below_zero, allqs)
+ax.set_xlim(-2e-6,2E-6)
+ax.set_ylim(-2e-6,2E-6)
+parpole_ani.save(f"{filestem}_zoomed_time.mp4", dpi = 300, fps=60)
+plt.show()

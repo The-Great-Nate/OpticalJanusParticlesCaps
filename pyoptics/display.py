@@ -70,7 +70,7 @@ class DisplayObject (object):
         #cs=ax.contourf(X, Y, I, cmap=cm.viridis, levels=30)
         #cs=ax.imshow(I[k],cmap=cm.summer)
         extents = (lower,upper,lower,upper)
-        cs=ax.imshow(I,cmap=cm.viridis,vmin=0.0,vmax=I0,origin="lower",extent=extents)
+        cs=ax.imshow(I,cmap=cm.Blues,vmin=0.0,vmax=I0,origin="lower",extent=extents)
         ax.set_aspect('equal','box')
         ax.set_xlabel("x (m)")
         ax.set_ylabel("y (m)")
@@ -112,6 +112,8 @@ class DisplayObject (object):
         axis_colors = ['r', 'g', 'b']
 
         self.body_axes = []
+        self.title_text = ax.text(0.5, 1.02, '', transform=ax.transAxes, ha='center', va='bottom', fontsize=14, animated=True)
+
 
         for p in range(n_particles):
             axes_for_particle = []
@@ -123,7 +125,8 @@ class DisplayObject (object):
         def init_anim():
             for trajectory in self.particles_trajectories + self.dipoles_trajectories:
                 trajectory.set_data([], [])
-            return self.particles_trajectories + self.dipoles_trajectories
+            self.title_text.set_text('')
+            return [self.title_text] + self.particles_trajectories + self.dipoles_trajectories
 
         def animate(fff):
             p = 0
@@ -131,6 +134,8 @@ class DisplayObject (object):
             start = max(frames - 2, 0)
             end = frames
             real_n_particles = int(n_particles/2) #because n_particles is actually the number of colours now
+            
+            self.title_text.set_text(f'Timestep = {frames}')
             for p in range(real_n_particles):
                 q = allqs[frames, p]  
 

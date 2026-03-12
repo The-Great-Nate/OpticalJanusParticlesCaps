@@ -155,6 +155,10 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
     #=========================================================
     # Main simulation loop
     #=========================================================
+    optical = np.zeros((3,3))
+    torques = np.zeros((3,3))
+    couples = np.zeros((3,3))
+    dipole_positions = np.zeros(((number_of_dipoles),3))
     for i in range(number_of_timesteps):
         #
         # Pass in list of dipole positions to generate total dipole array;
@@ -194,7 +198,7 @@ def perform_simulation(number_of_particles, positions, sphere_radius, dipole_rad
         #print("rotated_dipoles shape")
         #print(rotated_dipoles.shape)
         #print(f"BEFORE FRED {dipole_above_zero}")
-        optical, torques, couples, dipole_positions = dipoles.py_optical_force_torque_array(position_vectors, dipole_radius, array_of_rotated_dipoles, array_of_ref_inds, beam_collection)   
+        # optical, torques, couples, dipole_positions = dipoles.py_optical_force_torque_array(position_vectors, dipole_radius, array_of_rotated_dipoles, array_of_ref_inds, beam_collection)   
              
         #couples = None
         #include_couple==False

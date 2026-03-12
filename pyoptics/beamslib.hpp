@@ -8,6 +8,9 @@
 #define BEAMTYPE_GAUSS_CSP 2
 #define BEAMTYPE_BESSEL 3
 #define BEAMTYPE_LAGUERRE_GAUSSIAN 4
+#define BEAMTYPE_RICHARDS_WOLF 5
+#define BEAMTYPE_RICHARDS_WOLF_ANALYTIC 6
+#define BEAMTYPE_SINGLE_MODE 7
 
 #define TINY 1e-12
 
@@ -43,6 +46,10 @@ typedef struct {
     double w0;
     int gouy;
     int numkpoints;
+    double NA;
+    double nm;
+    double sigma;
+    double zernike[3];
 //    std::complex<double> jones[2];
 } BEAM;
 
@@ -84,12 +91,18 @@ void general_bessel_fields(double x, double y, double z, BEAM *thisbeam, std::co
 void gaussian_barton5_fields(double x, double y, double z, BEAM *thisbeam, std::complex<double> *Epxyz);
 void gaussian_csp_fields(double x, double y, double z, BEAM *thisbeam, std::complex<double> *Epxyz);
 void laguerre_gaussian_fields(double x, double y, double z, BEAM *thisbeam, std::complex<double> *Epxyz);
+void richards_wolf_fields(double x, double y, double z, BEAM *thisbeam, std::complex<double> *Epxyz);
+void richards_wolf_analytic_fields(double x, double y, double z, BEAM *thisbeam, std::complex<double> *Epxyz);
+void single_mode_fields(double x, double y, double z, BEAM *thisbeam, std::complex<double> *Epxyz);
 
 void plane_wave_field_gradients(double x, double y, double z, BEAM *thisbeam, std::complex<double> gradEpxyz[][3]);
 void general_bessel_field_gradients(double x, double y, double z, BEAM *thisbeam, std::complex<double> gradEpxyz[][3]);
 void gaussian_barton5_field_gradients(double x, double y, double z, BEAM *thisbeam, std::complex<double> gradEpxyz[][3]);
 void gaussian_csp_field_gradients(double x, double y, double z, BEAM *thisbeam, std::complex<double> gradEpxyz[][3]);
 void laguerre_gaussian_field_gradients_fd(double x, double y, double z, BEAM *thisbeam, std::complex<double> gradEpxyz[][3]);
+void richards_wolf_field_gradients_fd(double x, double y, double z, BEAM *thisbeam, std::complex<double> gradEpxyz[][3]);
+void richards_wolf_analytic_field_gradients_fd(double x, double y, double z, BEAM *thisbeam, std::complex<double> gradEpxyz[][3]);
+void single_mode_field_gradients_fd(double x, double y, double z, BEAM *thisbeam, std::complex<double> gradEpxyz[][3]);
 
 
 double eek(double kappa, double kk, double E0, double zR, int order, int gouy);

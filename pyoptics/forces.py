@@ -28,14 +28,14 @@ def non_bonded(constant1, constant2, r):
     force = - constant1 * (1.0-r_abs/constant2)*r/r_abs
     return force
 
-def non_bonded_array(number_of_particles, displacements_matrix, positions, exceptions):
+def non_bonded_array(number_of_particles, displacements_matrix, positions, exceptions, sphere_radius):
     #
     # This version using a DPD-like non-bonded force expression.
     #
     displacements_matrix_T = np.transpose(displacements_matrix)
     #
     ConstantA = 1e-12 # 1pN reasonable max force
-    ConstantB = 0.6e-6 # guess at nearest separation
+    ConstantB = 2.5 * sphere_radius # guess at nearest separation
 #    nonbonded_force_matrix = np.zeros(
 #        [number_of_particles, number_of_particles], dtype=object
 #    )
